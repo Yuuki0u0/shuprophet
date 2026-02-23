@@ -102,6 +102,9 @@ const chartOption = computed(() => {
   const series = [];
   const legendData = [];
 
+  // 现代高级调色盘：深青、丁香紫、琥珀橙、珊瑚粉等
+  const colors = ['#0ea5e9', '#8b5cf6', '#f59e0b', '#f43f5e', '#10b981', '#6366f1', '#ec4899', '#14b8a6'];
+
   legendData.push(chartData.value.actual_data.model_name);
   series.push({
     name: chartData.value.actual_data.model_name,
@@ -109,67 +112,168 @@ const chartOption = computed(() => {
     smooth: true,
     showSymbol: false,
     data: chartData.value.actual_data.data,
-    lineStyle: { color: '#CD853F', width: 2.5 }
+    lineStyle: { color: '#1e293b', width: 3 },
+    areaStyle: {
+      color: {
+        type: 'linear',
+        x: 0, y: 0, x2: 0, y2: 1,
+        colorStops: [
+          { offset: 0, color: 'rgba(30, 41, 59, 0.15)' },
+          { offset: 1, color: 'rgba(30, 41, 59, 0.02)' }
+        ]
+      }
+    }
   });
 
-  const colors = ['#FFD700', '#CD7F32', '#B87333', '#E0BFB8', '#FFBF00', '#CC5500', '#D4AF37'];
   chartData.value.model_predictions.forEach((model, index) => {
     legendData.push(model.model_name);
+    const color = colors[index % colors.length];
     series.push({
       name: model.model_name,
       type: 'line',
       smooth: true,
       showSymbol: false,
       data: model.data,
-      lineStyle: { type: 'dashed', width: 2, color: colors[index % colors.length] }
+      lineStyle: { width: 2, color: color },
+      emphasis: { lineStyle: { width: 3 } }
     });
   });
 
   return {
-    title: { text: '模型性能可视化对比', left: 'center', textStyle: { color: '#FFD700' } },
-    tooltip: { trigger: 'axis', backgroundColor: 'rgba(26, 20, 16, 0.95)', borderColor: '#3d2817' },
-    legend: { data: legendData, top: 'bottom', textStyle: { color: '#E0BFB8' } },
-    grid: { left: '3%', right: '4%', bottom: '10%', containLabel: true },
-    xAxis: { type: 'value', name: 'X', splitLine: { show: false }, axisLabel: { color: '#c9a87c' }, nameTextStyle: { color: '#c9a87c' } },
-    yAxis: { type: 'value', name: 'Y', splitLine: { lineStyle: { color: '#3d2817' } }, axisLabel: { color: '#c9a87c' }, nameTextStyle: { color: '#c9a87c' } },
+    title: {
+      text: '模型性能可视化对比',
+      left: 'center',
+      textStyle: { color: '#0f172a', fontSize: 18, fontWeight: 600, fontFamily: 'Inter, PingFang SC, sans-serif' }
+    },
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: 'rgba(15, 23, 42, 0.95)',
+      borderColor: 'transparent',
+      textStyle: { color: '#f1f5f9', fontSize: 14, fontFamily: 'Inter, PingFang SC, sans-serif' },
+      padding: [12, 16],
+      axisPointer: {
+        type: 'cross',
+        lineStyle: { color: '#94a3b8', width: 1, type: 'dashed' }
+      },
+      formatter: (params) => {
+        let result = `<div style="font-weight: 600; margin-bottom: 8px;">${params[0].axisValue}</div>`;
+        params.forEach(item => {
+          result += `<div style="display: flex; align-items: center; margin: 4px 0;">
+            <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: ${item.color}; margin-right: 8px;"></span>
+            <span style="flex: 1;">${item.seriesName}</span>
+            <span style="font-weight: 600; margin-left: 12px;">${item.value[1]}</span>
+          </div>`;
+        });
+        return result;
+      }
+    },
+    legend: {
+      data: legendData,
+      bottom: 20,
+      textStyle: { color: '#475569', fontSize: 14, fontFamily: 'Inter, PingFang SC, sans-serif' },
+      type: 'scroll',
+      pageIconColor: '#0ea5e9',
+      pageTextStyle: { color: '#64748b' },
+      itemGap: 20
+    },
+    grid: { left: '3%', right: '4%', bottom: '18%', top: '12%', containLabel: true },
+    xAxis: {
+      type: 'value',
+      name: 'X',
+      splitLine: { show: false },
+      axisLine: { lineStyle: { color: '#e2e8f0' } },
+      axisLabel: { color: '#64748b', fontSize: 14, fontFamily: 'Inter, sans-serif', margin: 12 },
+      nameTextStyle: { color: '#0f172a', fontSize: 14, fontFamily: 'Inter, sans-serif', padding: [0, 0, 0, 40] }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Y',
+      splitLine: { lineStyle: { color: '#f1f5f9', type: 'dashed', width: 1 } },
+      axisLine: { show: false },
+      axisLabel: { color: '#64748b', fontSize: 14, fontFamily: 'Inter, sans-serif', margin: 12 },
+      nameTextStyle: { color: '#0f172a', fontSize: 14, fontFamily: 'Inter, sans-serif', padding: [0, 0, 10, 0] }
+    },
     series: series,
-    toolbox: { feature: { saveAsImage: {}, dataZoom: { yAxisIndex: 'none' } }, iconStyle: { borderColor: '#94a3b8' } },
-    dataZoom: [{ type: 'inside', filterMode: 'weak' }, { type: 'slider', backgroundColor: 'rgba(30, 41, 59, 0.4)', fillerColor: 'rgba(64, 158, 255, 0.2)' }],
+    dataZoom: [
+      { type: 'inside', filterMode: 'none' },
+      {
+        type: 'slider',
+        height: 24,
+        bottom: 60,
+        backgroundColor: '#f8fafc',
+        fillerColor: 'rgba(14, 165, 233, 0.15)',
+        borderColor: '#e2e8f0',
+        handleStyle: { color: '#0ea5e9', borderColor: '#0ea5e9' },
+        textStyle: { color: '#64748b', fontFamily: 'Inter, sans-serif' },
+        dataBackground: { lineStyle: { color: '#cbd5e1' }, areaStyle: { color: '#e2e8f0' } }
+      }
+    ]
   };
 });
 
 const performanceOption = computed(() => {
   if (!chartData.value) return {};
 
-  // 按MAE排序（从小到大，最好的在前）
   const sorted = chartData.value.model_predictions
     .map(m => ({ name: m.model_name, mae: m.metrics.mae }))
     .sort((a, b) => a.mae - b.mae);
 
   const models = sorted.map(m => m.name);
   const maeValues = sorted.map(m => m.mae);
-  const baseline = Math.max(...maeValues);
 
   return {
-    title: { text: '性能对比 (MAE)', left: 'center', textStyle: { color: '#FFD700', fontSize: 16 } },
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
-    xAxis: { type: 'category', data: models, axisLabel: { color: '#c9a87c', rotate: 15 } },
-    yAxis: { type: 'value', name: 'MAE', axisLabel: { color: '#c9a87c' }, nameTextStyle: { color: '#c9a87c' } },
+    title: {
+      text: '性能对比 (MAE)',
+      left: 'center',
+      textStyle: { color: '#0f172a', fontSize: 18, fontWeight: 600, fontFamily: 'Inter, PingFang SC, sans-serif' }
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(14, 165, 233, 0.05)' } },
+      backgroundColor: 'rgba(15, 23, 42, 0.95)',
+      borderColor: 'transparent',
+      textStyle: { color: '#f1f5f9', fontSize: 14, fontFamily: 'Inter, PingFang SC, sans-serif' },
+      padding: [12, 16]
+    },
+    grid: { left: '3%', right: '4%', bottom: '8%', top: '15%', containLabel: true },
+    xAxis: {
+      type: 'category',
+      data: models,
+      axisLine: { lineStyle: { color: '#e2e8f0' } },
+      axisLabel: { color: '#64748b', rotate: 20, fontSize: 14, fontFamily: 'Inter, sans-serif', margin: 12 }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'MAE',
+      splitLine: { lineStyle: { color: '#f1f5f9', type: 'dashed' } },
+      axisLine: { show: false },
+      axisLabel: { color: '#64748b', fontSize: 14, fontFamily: 'Inter, sans-serif', margin: 12 },
+      nameTextStyle: { color: '#0f172a', fontSize: 14, fontFamily: 'Inter, sans-serif' }
+    },
     series: [{
       type: 'bar',
-      data: maeValues.map((v, i) => ({
-        value: v,
-        itemStyle: {
-          color: i === 0 ? '#FFD700' : i === 1 ? '#E0BFB8' : i === 2 ? '#CD7F32' : '#666666'
-        },
-        label: {
-          show: true,
-          position: 'top',
-          formatter: () => `↓${((baseline - v) / baseline * 100).toFixed(1)}%`,
-          color: i < 3 ? '#FFD700' : '#999999'
+      barWidth: '50%',
+      itemStyle: {
+        borderRadius: [6, 6, 0, 0],
+        color: {
+          type: 'linear',
+          x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: '#0ea5e9' },
+            { offset: 1, color: '#06b6d4' }
+          ]
         }
-      }))
+      },
+      label: {
+        show: true,
+        position: 'top',
+        formatter: '{c}',
+        color: '#0f172a',
+        fontSize: 13,
+        fontWeight: 600,
+        fontFamily: 'Inter, sans-serif'
+      },
+      data: maeValues
     }]
   };
 });

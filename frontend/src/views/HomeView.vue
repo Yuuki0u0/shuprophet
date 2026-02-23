@@ -4,9 +4,7 @@
     <!-- 1. 直接在这里添加图片 -->
     <img src="@/assets/logo.png" alt="Project Logo" class="home-logo">
 
-    <h1>鼠先知 SHU Prophet 平台</h1>
-    <p class="subtitle">新一代时序智能预测与决策平台</p>
-    <p class="subtitle">作者：Wei Li</p>
+    <p class="subtitle">作者：Wei Li, Zixin Wang</p>
 
     <!-- 论文徽章展示墙 -->
     <div class="badge-grid">

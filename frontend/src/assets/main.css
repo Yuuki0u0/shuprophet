@@ -1,9 +1,9 @@
 /* --- Global Reset & Base --- */
 *, *::before, *::after { box-sizing: border-box; }
 body {
-  background-color: #0a0806; /* 深棕黑背景 */
-  color: #f5e6d3; /* 暖色调文字 */
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  background: #F8F9FA;
+  color: #1d1d1f;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -13,13 +13,14 @@ body {
 /* --- Layout --- */
 .app-layout { height: 100%; }
 .app-aside {
-  background-color: #1a1410; /* 深棕色侧边栏 */
-  border-right: 1px solid #3d2817;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
   transition: width 0.3s;
 }
 .app-main {
-  padding: 24px;
-  background-color: #0f0c0a; /* 主内容区深色背景 */
+  padding: 40px;
+  background: transparent;
   overflow-y: auto;
 }
 
@@ -29,196 +30,196 @@ body {
   align-items: center;
   justify-content: center;
   height: 60px;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  color: #FFD700; /* 金色Logo */
+  color: #1d1d1f;
   gap: 10px;
-  background-color: #2a1f15;
+  background: transparent;
 }
 .el-menu {
   border-right: none !important;
-  background-color: #1a1410 !important;
+  background-color: transparent !important;
 }
 .el-menu-item {
-  font-weight: 500;
-  color: #c9a87c !important;
+  font-weight: 400;
+  color: #6e6e73 !important;
+  border-radius: 8px;
+  margin: 4px 12px;
 }
 .el-menu-item:hover {
-  background-color: #2a1f15 !important;
-  color: #FFD700 !important;
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  color: #1d1d1f !important;
 }
 .el-menu-item.is-active {
-  background-color: #3d2817 !important;
-  color: #FFD700 !important;
+  background-color: rgba(0, 0, 0, 0.08) !important;
+  color: #1d1d1f !important;
+  font-weight: 500;
 }
 
 /* --- Page & Module Styles --- */
 .page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #FFD700; /* 金色标题 */
-  margin-bottom: 24px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #3d2817;
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 32px;
+  padding-bottom: 0;
+  border-bottom: none;
+  letter-spacing: 0.05em;
 }
 .module-card {
-  background-color: #1a1410;
-  border-radius: 12px;
-  padding: 24px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 36px;
   margin-bottom: 24px;
-  border: 1px solid #3d2817;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+.module-card:hover {
+  transform: scale(1.02);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
 }
 .module-title {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
-  color: #E0BFB8; /* 玫瑰金标题 */
+  color: #1d1d1f;
   margin-top: 0;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  letter-spacing: 0.02em;
+  text-align: left;
 }
 .el-form-item__label {
-  color: #c9a87c !important;
+  color: #6e6e73 !important;
+  font-weight: 500;
 }
 
 /* --- Home View Specific --- */
-.home-view { text-align: center; padding-top: 5vh; }
+.home-view { text-align: center; padding-top: 8vh; }
 .hero h1 {
-  font-size: 3.5rem;
-  font-weight: 800;
-  background: linear-gradient(45deg, #38bdf8, #a78bfa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 4rem;
+  font-weight: 600;
+  color: #1d1d1f;
   margin-bottom: 1rem;
+  letter-spacing: 0.1em;
 }
 .hero .subtitle {
-  font-size: 1.25rem;
-  color: #94a3b8; /* 副标题颜色，保持柔和 */
-  margin-bottom: 2.5rem;
+  font-size: 1.5rem;
+  color: #6e6e73;
+  margin-bottom: 3rem;
+  font-weight: 400;
 }
 
 /* --- Research Explorer Specific --- */
-.metrics-cards { margin-bottom: 20px; }
+.metrics-cards { margin-bottom: 24px; }
 .metric-card {
-  background-color: #1e293b;
-  border-radius: 8px;
-  padding: 12px 16px;
-  color: #cbd5e1;
-  transition: all 0.2s ease-in-out;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(16px);
+  border-radius: 16px;
+  padding: 24px;
+  color: #1d1d1f;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
 }
 .metric-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transform: translateY(-4px) scale(1.02);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 .metric-card .model-name {
   display: block;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 8px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: #ffffff; /*【优化】指标卡片中的模型名称改为纯白 */
+  margin-bottom: 12px;
+  color: #1d1d1f;
+  text-align: left;
 }
 .metric-card .metrics {
   display: flex;
   justify-content: space-between;
-  font-size: 0.8rem;
-  color: #a6b0c3; /*【优化】指标名称(MAE/MSE)颜色 */
+  font-size: 0.9rem;
+  color: #6e6e73;
+  text-align: left;
 }
 .metric-card .metrics b {
-  color: #58a6ff; /*【优化】指标数值颜色，更鲜亮 */
-  font-size: 1rem;
+  color: #0071e3;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 /*【新增】让ECharts的坐标轴文字更清晰 */
 .chart text {
-  fill: #a6b0c3 !important;
+  fill: #6e6e73 !important;
 }
 
 /* --- Animation --- */
 .fade-enter-active, .fade-leave-active {
-  transition: opacity 0.2s ease;
+  transition: opacity 0.3s ease;
 }
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
 }
-/* --- [新增] 内容页 (About/Algorithms) 元素美化 --- */
 
-/* 通用内容卡片内的段落样式 */
+/* --- Content Cards --- */
 .module-card p {
-  line-height: 1.8; /* 增加行高，阅读更舒适 */
-  color: #b0c4de;   /* 使用比全局默认更亮的颜色 */
-  font-size: 1rem;
+  line-height: 1.8;
+  color: #1d1d1f;
+  font-size: 1.05rem;
+  text-align: left;
 }
-
-/* 通用内容卡片内的三级标题样式 (h3) */
-/* .module-card h3 {
-  color: #87cefa; 
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #1e293b;
-}
-.module-card h4 {
-  color: #87cefa; 
-  font-size: 1.0rem;
-  font-weight: 600;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #1e293b;
-} */
 
 .module-card .card-title {
-  color: #87cefa;
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin-top: 2rem; /* 第一个标题不需要上边距 */
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #1e293b;
-}
-.module-card .card-title:first-of-type {
-  margin-top: 0; /* 【关键】让卡片里的第一个标题没有上边距 */
-}
-.module-card .card-subtitle {
-  color: #87cefa;
-  font-size: 1.0rem;
+  color: #1d1d1f;
+  font-size: 1.3rem;
   font-weight: 600;
   margin-top: 2rem;
   margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #1e293b;
+  text-align: left;
+  letter-spacing: 0.02em;
+}
+.module-card .card-title:first-of-type {
+  margin-top: 0;
+}
+.module-card .card-subtitle {
+  color: #1d1d1f;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  text-align: left;
 }
 
 .module-card ul {
   list-style-type: disc;
   padding-left: 1.5rem;
-  color: #b0c4de; /* 列表文字颜色 */
+  color: #1d1d1f;
+  text-align: left;
 }
 .module-card li {
   margin-bottom: 0.5rem;
-  line-height: 1.6;
-  font-size: 1rem;
+  line-height: 1.8;
+  font-size: 1.05rem;
 }
 .module-card table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
-  background-color: #409eff;
+  background-color: #ffffff;
 }
 .module-card th, .module-card td {
-  border: 1px solid #1e293b;
-  padding: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 12px;
   text-align: left;
-  color: #0b4899; /* 表格文字颜色 */
+  color: #1d1d1f;
 }
-.module-card el-table {
-  background-color: #0c1a32; /* 表格背景色 */
+.module-card th {
+  background: #f5f5f7;
+  font-weight: 600;
 }
 
 
@@ -226,102 +227,94 @@ body {
 
 /* 步骤条 (el-steps) 样式优化 */
 .el-step__title {
-  font-size: 1rem !important; /* 增大标题字号 */
+  font-size: 1rem !important;
+  color: #1d1d1f !important;
 }
 .el-step__title.is-finish {
-  color: #67c23a !important; /* 完成步骤的标题颜色 */
+  color: #0071e3 !important;
 }
 .el-step__description.is-finish {
-  color: #a6b0c3 !important; /* 完成步骤的描述文字颜色 */
+  color: #6e6e73 !important;
 }
 .el-step__head.is-finish {
-  color: #67c23a !important;       /* 图标颜色 */
-  border-color: #67c23a !important; /* 线条颜色 */
+  color: #0071e3 !important;
+  border-color: #0071e3 !important;
 }
 
 /* 时间线 (el-timeline) 样式优化 */
 .el-timeline-item__timestamp {
-  color: #e6a23c !important; /* 时间戳/标题的颜色，改为醒目的橙色 */
+  color: #0071e3 !important;
   font-size: 1rem !important;
   font-weight: 600;
 }
 .el-timeline-item__content {
-  color: #b0c4de !important; /* 内容文字颜色 */
-  font-size: 0.95rem;
-  padding-bottom: 1rem; /* 增加条目间距 */
+  color: #1d1d1f !important;
+  font-size: 1rem;
+  padding-bottom: 1rem;
 }
 .el-timeline-item__node {
-  background-color: #409eff !important; /* 圆圈节点的颜色 */
+  background-color: #0071e3 !important;
 }
 
 /* --- Mobile Responsiveness --- */
-/* 当屏幕宽度小于等于 768px 时 (典型的平板和手机)，以下样式生效 */
 @media (max-width: 768px) {
-
-  /* 1. [关键] 将侧边栏改为固定定位，并默认移出屏幕外 */
   .app-aside {
-    position: fixed; /* 脱离文档流，使其可以覆盖在内容之上 */
+    position: fixed;
     top: 0;
     left: 0;
     bottom: 0;
-    z-index: 1001; /* 确保菜单在遮罩层之上 */
-    transform: translateX(-100%); /* 默认隐藏在左侧屏幕外 */
-    transition: transform 0.3s ease-in-out; /* 添加平滑的滑动动画 */
-    border-right: 1px solid #1e293b; /* 在移动端加上边框，更好看 */
+    z-index: 1001;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
   }
 
-  /* 2. [关键] 当拥有 is-mobile-open 类时，将侧边栏滑入屏幕 */
   .app-aside.is-mobile-open {
-    transform: translateX(0); /* 移动回屏幕内 */
+    transform: translateX(0);
   }
 
-  /* 3. [关键] 显示移动端专用的顶部栏和汉堡按钮 */
   .app-header {
-    display: flex !important; /* 使用 !important 确保覆盖 scoped style */
+    display: flex !important;
     align-items: center;
-    background-color: #0c1a32;
-    border-bottom: 1px solid #1e293b;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
     height: 60px;
     padding: 0 16px;
-    position: sticky; /* 让顶部栏在滚动时固定在顶部 */
+    position: sticky;
     top: 0;
     z-index: 999;
   }
   .mobile-menu-toggle {
     font-size: 24px;
     cursor: pointer;
-    color: #e2e8f0;
+    color: #1d1d1f;
   }
   .header-title {
     margin-left: 16px;
     font-size: 1rem;
     font-weight: 600;
-    color: #e2e8f0;
+    color: #1d1d1f;
   }
 
-  /* 4. [关键] 主内容区不再需要为侧边栏留空 */
   .app-main {
-    padding: 12px;
-    margin-left: 0; 
+    padding: 20px;
+    margin-left: 0;
   }
 
-  /* 5. [关键] 遮罩层样式 */
   .menu-overlay {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1000; /* 在菜单之下，内容区之上 */
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 1000;
   }
 
-  /* 6. 其他视觉优化 */
   .page-title {
-    font-size: 1.5rem;
-    margin-bottom: 16px;
-    padding-bottom: 8px;
+    font-size: 2rem;
+    margin-bottom: 24px;
   }
-  .module-card { padding: 16px; }
-  .module-title { font-size: 1.1rem; }
+  .module-card { padding: 24px; }
+  .module-title { font-size: 1.3rem; }
 }
