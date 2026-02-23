@@ -6,6 +6,7 @@
       <div class="hero-content">
         <h1 class="hero-title">鼠先知 (SHU Prophet)</h1>
         <p class="hero-subtitle">一个集前沿算法、交互验证与实时应用于一体的时序智能决策平台</p>
+        <p class="hero-authors">作者：Wei Li, Zixin Wang</p>
         <el-button type="primary" size="large" round @click="goToExplorer">
           <el-icon><DataLine /></el-icon>
           立即开始探索
@@ -144,8 +145,8 @@ const steps = ref([
   padding: 5rem 2rem;
   margin-bottom: 4rem;
   border-radius: 18px;
-  background: radial-gradient(circle, rgba(42,31,21,1) 0%, rgba(26,20,16,1) 100%);
-  border: 1px solid #3d2817;
+  background: linear-gradient(135deg, #f5f5f7 0%, #e8e8ed 100%);
+  border: 1px solid rgba(0,0,0,0.08);
   overflow: hidden;
   position: relative;
 }
@@ -156,18 +157,23 @@ const steps = ref([
 .hero-title {
   font-size: 3.2rem;
   font-weight: 800;
-  background: -webkit-linear-gradient(45deg, #FFD700, #E0BFB8);
+  background: -webkit-linear-gradient(45deg, #1d1d1f, #1d1d1f);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin: 0 0 1rem 0;
 }
 .hero-subtitle {
   font-size: 1.2rem;
-  color: #c9a87c;
-  margin-bottom: 2.5rem;
+  color: #6e6e73;
+  margin-bottom: 1rem;
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+}
+.hero-authors {
+  font-size: 1rem;
+  color: #6e6e73;
+  margin-bottom: 2.5rem;
 }
 .hero-section .el-button {
   font-weight: bold;
@@ -177,8 +183,8 @@ const steps = ref([
 .section-title {
   text-align: center;
   font-size: 2.2rem;
-  font-weight: 700;
-  color: #FFD700;
+  font-weight: 600;
+  color: #1d1d1f;
   margin: 4rem 0 2.5rem 0;
   position: relative;
   display: flex;
@@ -188,14 +194,14 @@ const steps = ref([
 .section-title span {
   position: relative;
   padding: 0 20px;
-  background-color: #0f0c0a;
+  background-color: #f5f5f7;
 }
 .section-title::before {
   content: '';
   position: absolute;
   width: 30%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, #3d2817, transparent);
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -204,8 +210,8 @@ const steps = ref([
 
 /* --- Philosophy Section --- */
 .philosophy-card {
-  background-color: #1a1410;
-  border: 1px solid #3d2817;
+  background-color: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
   border-radius: 12px;
   padding: 2rem;
   text-align: center;
@@ -213,16 +219,16 @@ const steps = ref([
 }
 .philosophy-icon {
   font-size: 2.5rem;
-  color: #FFD700;
+  color: #1d1d1f;
   margin-bottom: 1rem;
 }
 .philosophy-card h3 {
-  color: #E0BFB8;
+  color: #1d1d1f;
   font-size: 1.3rem;
   margin: 0 0 1rem 0;
 }
 .philosophy-card p {
-  color: #c9a87c;
+  color: #6e6e73;
   line-height: 1.7;
 }
 
@@ -231,7 +237,7 @@ const steps = ref([
   text-align: center;
   max-width: 800px;
   margin: 0 auto 2.5rem auto;
-  color: #c9a87c;
+  color: #6e6e73;
   font-size: 1.1rem;
   line-height: 1.8;
 }
@@ -249,8 +255,8 @@ const steps = ref([
 }
 
 .model-intro-card {
-  background-color: #1a1410;
-  border: 1px solid #3d2817;
+  background-color: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -258,7 +264,7 @@ const steps = ref([
 .model-intro-card:hover {
   transform: scale(1.03);
   box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
-  border-color: #FFD700;
+  border-color: #1d1d1f;
 }
 
 .model-card-header {
@@ -276,15 +282,15 @@ const steps = ref([
   left: 0;
   right: 0;
   padding: 1rem;
-  background: linear-gradient(to top, rgba(26, 20, 16, 0.9) 0%, transparent 100%);
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, transparent 100%);
 }
 .model-name-overlay h3 {
   margin: 0;
-  color: #FFD700;
+  color: #1d1d1f;
   font-size: 1.5rem;
 }
 .model-name-overlay span {
-  color: #E0BFB8;
+  color: #1d1d1f;
   font-size: 0.9rem;
   font-weight: bold;
 }
@@ -293,7 +299,7 @@ const steps = ref([
   padding: 1.5rem;
 }
 .model-card-body p {
-  color: #c9a87c;
+  color: #6e6e73;
   line-height: 1.7;
   margin: 0;
 }
@@ -312,8 +318,8 @@ const steps = ref([
 .getting-started-step {
   display: flex;
   align-items: flex-start;
-  background-color: #1a1410;
-  border: 1px solid #3d2817;
+  background-color: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
   border-radius: 10px;
   padding: 1.5rem;
   gap: 1.5rem;
@@ -323,8 +329,8 @@ const steps = ref([
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-color: #3d2817;
-  color: #FFD700;
+  background-color: rgba(0,0,0,0.08);
+  color: #1d1d1f;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -333,12 +339,12 @@ const steps = ref([
 }
 .step-content h4 {
   margin: 0 0 0.5rem 0;
-  color: #E0BFB8;
+  color: #1d1d1f;
   font-size: 1.2rem;
 }
 .step-content p {
   margin: 0;
-  color: #c9a87c;
+  color: #6e6e73;
   line-height: 1.7;
 }
 </style>

@@ -14,7 +14,12 @@ import numpy as np
 
 # --- 这部分与之前相同：加载环境变量并实例化模型 ---
 load_dotenv()
-llm = ChatOpenAI(model_name="moonshot-v1-8k", temperature=0.7)
+llm = ChatOpenAI(
+    model_name="glm-4-flash",
+    openai_api_key=os.getenv("OPENAI_API_KEY"),
+    openai_api_base="https://open.bigmodel.cn/api/paas/v4/",
+    temperature=0.7
+)
 
 # --- 核心升级：为 Agent 注入丰富的角色和个性的系统提示词 ---
 system_prompt = """
