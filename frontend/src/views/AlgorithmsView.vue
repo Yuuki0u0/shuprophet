@@ -254,39 +254,44 @@ const showBibtex = (algo) => {
   background-color: transparent;
 }
 
-/* 深度选择器，修改Element Plus组件的内部样式 */
 :deep(.el-tabs__header) {
-  background-color: #1a1410;
-  border-bottom: 1px solid #3d2817;
-}
-:deep(.el-tabs__nav-wrap) {
-  border-radius: 8px 8px 0 0;
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 12px 12px 0 0;
 }
 :deep(.el-tabs__item) {
-  color: #c9a87c;
+  color: #6e6e73;
+  font-weight: 500;
+}
+:deep(.el-tabs__item:hover) {
+  color: #1d1d1f;
 }
 :deep(.el-tabs__item.is-active) {
-  background-color: #3d2817 !important;
-  color: #FFD700 !important;
+  background-color: rgba(0, 113, 227, 0.08) !important;
+  color: #0071e3 !important;
 }
 :deep(.el-tabs__content) {
-  padding: 24px;
-  background-color: #1a1410;
+  padding: 32px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  border-radius: 0 0 12px 12px;
 }
 
 .algorithm-content h3 {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #FFD700;
-  font-size: 1.2rem;
+  color: #1d1d1f;
+  font-size: 1.15rem;
+  font-weight: 600;
   margin-top: 0;
   margin-bottom: 1rem;
 }
 
 .algorithm-content p, .algorithm-content li {
   line-height: 1.8;
-  color: #c9a87c;
+  color: #1d1d1f;
   font-size: 1rem;
 }
 
@@ -303,42 +308,43 @@ const showBibtex = (algo) => {
 .architecture-image {
   width: 100%;
   height: 300px;
-  background-color: #1e293b;
-  border-radius: 8px;
+  background-color: #f5f5f7;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 .image-slot {
   text-align: center;
-  color: #94a3b8;
+  color: #6e6e73;
 }
 .image-slot .el-icon {
   font-size: 40px;
 }
 
 .bibtex-container {
-  background-color: #1e293b; /* 深色背景 */
-  border-radius: 6px;
+  background-color: #f5f5f7;
+  border-radius: 8px;
   padding: 1rem;
-  overflow-x: auto; /* 内容过长时允许横向滚动 */
+  overflow-x: auto;
 }
 
 pre {
   margin: 0;
-  white-space: pre-wrap;   /* 自动换行 */
-  word-wrap: break-word; /* 单词过长时打断 */
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 code {
-  color: #c7d2fe; /* 亮色文字 */
+  color: #1d1d1f;
   font-family: 'Courier New', Courier, monospace;
   font-size: 0.9rem;
 }
 
 .citation-section {
-  margin-top: 2rem; /* 增加上外边距，2rem 大约等于 32px，可以根据喜好调整 */
-  padding-top: 1.5rem; /* 增加上内边距，让内容区更舒适 */
-  border-top: 1px solid #1e293b; /* 在上方添加一条细微的分割线，增强区隔感 */
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 </style>

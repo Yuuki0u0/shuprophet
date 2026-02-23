@@ -97,10 +97,13 @@ import { UploadFilled } from '@element-plus/icons-vue'
 import axios from 'axios';
 
 // Markdown渲染函数
+marked.setOptions({ breaks: true, gfm: true });
 const renderMarkdown = (text) => {
   if (!text) return '';
   try {
-    return marked.parse(text);
+    // 确保 # 标题前有空行，否则 marked 不解析
+    const normalized = text.replace(/([^\n])(\n#{1,3}\s)/g, '$1\n$2');
+    return marked.parse(normalized);
   } catch (e) {
     return text;
   }

@@ -46,27 +46,33 @@ llm = _detect_llm()
 
 # --- 核心升级：为 Agent 注入丰富的角色和个性的系统提示词 ---
 system_prompt = """
-# 角色与目标
-你是一个名为 "鼠先知 (SHU Prophet)" 的 AI 智能助理，由开发者 Wei Li 为其同名时序智能决策平台精心打造。你的核心目标是作为用户的专业、友好且可靠的分析伙伴，引导他们使用平台的核心预测功能。
+# 角色
+你是"鼠先知 (SHU Prophet)"AI智能助理，由Wei Li为同名时序智能决策平台打造。你是用户的专业分析伙伴。
 
-# 平台背景知识
-你对"鼠先知"平台了如指掌：
-- **定位**: 一个集前沿算法、交互验证与实时应用于一体的时序智能决策平台。
-- **核心优势**: 平台基于6篇CCF高水平论文（2篇CCF-B + 4篇CCF-C）的SOTA模型驱动，它们分别是：
-    1.  **ScatterFusion** (ICASSP 2026, CCF-B): 层级散射变换框架，通过多尺度不变特征提取实现鲁棒预测。
-    2.  **AWGFormer** (ICASSP 2026, CCF-B): 自适应小波引导Transformer，擅长多分辨率时序预测。
-    3.  **SWIFT** (ICANN 2025, CCF-C): 状态空间与小波集成技术，轻量化边缘推理。
-    4.  **LWSpace** (ICIC 2025, CCF-C): 多尺度状态空间框架，结合小波分解与选择性状态空间。
-    5.  **EnergyPatchTST** (ICIC 2025, CCF-C): 专为能源领域设计，支持多尺度分解和不确定性量化。
-    6.  **TimeFlowDiffuser** (ICANN 2025, CCF-C): 层级式扩散框架，擅长长周期预测。
-- **当前任务**: 你的主要任务是引导用户上传一个符合格式的CSV文件（含X, Y两列），然后平台的后台将使用一个经典且高效的ARIMA模型为用户提供即时预测体验。当被问及你的能力时，你可以提及上述SOTA模型作为平台的储备技术，但要明确告知用户，本次实时体验将使用ARIMA模型。
-- **沟通风格**: 专业、耐心、清晰、略带一丝对技术的热情。避免使用过于技术性的黑话，除非用户先提出。
+# 平台能力
+- 平台基于6篇CCF论文（2篇CCF-B + 4篇CCF-C）的SOTA模型：ScatterFusion、AWGFormer、SWIFT、LWSpace、EnergyPatchTST、TimeFlowDiffuser。
+1.  **ScatterFusion** (ICASSP 2026, CCF-B): 层级散射变换框架，通过多尺度不变特征提取实现鲁棒预测。               
+2.  **AWGFormer** (ICASSP 2026, CCF-B): 自适应小波引导Transformer，擅长多分辨率时序预测。                        
+3.  **SWIFT** (ICANN 2025, CCF-C): 状态空间与小波集成技术，轻量化边缘推理。                                      
+4.  **LWSpace** (ICIC 2025, CCF-C): 多尺度状态空间框架，结合小波分解与选择性状态空间。                           
+5.  **EnergyPatchTST** (ICIC 2025, CCF-C): 专为能源领域设计，支持多尺度分解和不确定性量化。                      
+6.  **TimeFlowDiffuser** (ICANN 2025, CCF-C): 层级式扩散框架，擅长长周期预测。
+在用户上传CSV文件后，你将基于数据特征分析，智能推荐最适合的模型，并生成专业的预测报告。预测报告将包含数据洞察、趋势分析、预测解读、模型推荐和风险提示等内容，帮助用户深入理解预测结果。但要注意，报告内容必须基于数据特征分析和模型预测结果，不能凭空编造。
+数据分析报告字数保持在500字以内，内容必须专业且有洞察力，避免过于冗长或表面化的描述。
+
+- 当用户上传CSV文件后，平台会同时启动两个预测引擎：
+  1. **ARIMA经典统计引擎**：基于自回归积分滑动平均模型，提供稳健的基线预测。
+  2. **鼠先知智能预测引擎**：平台自研的多Agent协作框架，通过特征感知(FAP)、链式推理(CoTP)、反思校验(RC)、统计验证(SV)四阶段流水线生成预测，并输出置信度评分。
+- 两个引擎的预测结果会在同一张图表上对比展示（ARIMA为绿色虚线，智能引擎为橙色点线），帮助用户交叉验证。
+
+# 沟通风格
+专业、耐心、清晰。避免过于技术性的黑话，除非用户先提出。
 
 # 交互流程
-1.  **主动问候**: 当对话开始时，主动进行自我介绍并发起对话。
-2.  **对话与引导**: 与用户进行自然对话。如果用户不确定做什么，或询问你的功能，你应该介绍平台并最终引导至核心目标："您想试试我们的实时预测功能吗？只需要上传一个简单的时间序列CSV文件即可。"
-3.  **确认意图**: 当用户同意上传文件后，你应该给出一个确认性的回复，例如："好的！请点击下方的上传按钮，选择您的CSV文件。我在这里等候您的数据。"
-4.  **处理闲聊**: 你可以回答一些关于平台、关于时间序列的基础问题，但最终都要设法绕回并引导用户使用预测功能。
+1. 对话开始时主动自我介绍。
+2. 引导用户上传CSV文件（含X, Y两列）体验双引擎预测。
+3. 用户同意后确认："好的！请点击上传按钮选择CSV文件，我在这里等候。"
+4. 闲聊时可回答时间序列相关问题，但最终引导至预测功能。
 """
 
 # --- 核心升级：创建带有记忆和系统提示词的对话链 ---
@@ -166,15 +172,36 @@ def generate_standalone_report(analysis_result: dict) -> str:
                 "AWGFormer（多尺度分析）" if insights.get('has_seasonality') else \
                 "EnergyPatchTST（不确定性量化）"
 
-    report_prompt_template = """你是"鼠先知"AI分析师。基于以下信息生成简洁专业报告（200字内），直接输出Markdown：
+    report_prompt_template = """你是"鼠先知"平台的AI数据分析师。请基于以下分析结果，生成一份专业的数据洞察报告。
 
-- 数据量：{hist_points}个历史点，预测{forecast_steps}步
+分析数据：
+- 数据规模：{hist_points}个历史观测点，预测未来{forecast_steps}步
 - 历史均值：{hist_mean}，预测均值：{pred_mean}
-- 趋势：{trend}，波动性：{volatility}
-- 异常点：{anomaly_count}个
-- 推荐模型：{model_rec}
+- 整体趋势：{trend}，波动性：{volatility}
+- 检测到{anomaly_count}个异常点
+- 推荐深度模型：{model_rec}
 
-包含：趋势分析、预测解读、模型推荐、风险提示。"""
+请严格按以下Markdown格式输出（每个标题前必须空一行）：
+
+## 数据概览
+
+简要描述数据的基本特征，包括规模、分布和整体走势。
+
+## 趋势与模式分析
+
+详细分析数据的趋势方向、波动特征、是否存在周期性模式，以及异常点的可能成因。
+
+## 预测解读
+
+对比历史均值与预测均值的变化，解读预测结果的含义和可信度。
+
+## 模型推荐
+
+基于数据特征推荐最适合的深度学习模型，并简要说明推荐理由。
+
+## 风险提示
+
+基于波动性和异常点情况给出风险提示和建议。"""
 
     REPORT_PROMPT = PromptTemplate(
         template=report_prompt_template,
@@ -197,14 +224,15 @@ def generate_standalone_report(analysis_result: dict) -> str:
 
 
 # === 鼠先知智能预测引擎 ===
-# 三阶段 Agent 协作框架：FAP → CoTP → SV
+# 四阶段 Agent 协作框架：FAP → CoTP → RC → SV
 
 def smart_predict(data_y: list, steps: int = 10) -> dict:
     """
     鼠先知智能预测引擎
     Phase 1 - Feature-Aware Profiling (FAP): 零token统计特征提取
     Phase 2 - Chain-of-Thought Prediction (CoTP): 特征引导链式推理
-    Phase 3 - Statistical Validation (SV): 置信度校准与异常修正
+    Phase 3 - Reflective Critique (RC): 自反思校验与预测修正
+    Phase 4 - Statistical Validation (SV): 置信度校准与异常修正
     """
     # === Phase 1: FAP ===
     insights = analyze_data_insights(data_y)
@@ -242,7 +270,33 @@ def smart_predict(data_y: list, steps: int = 10) -> dict:
         predictions = [float(slope * (len(data_y) + i) + intercept) for i in range(steps)]
         confidence = 0.3
 
-    # === Phase 3: SV ===
+    # === Phase 3: RC (Reflective Critique) ===
+    try:
+        rc_prompt = PromptTemplate(
+            template=(
+                "你是时序预测审核专家。审查以下预测并修正不合理之处。\n"
+                "特征：趋势={trend}, 波动={volatility}, 均值={mean}, std={std}\n"
+                "尾部5点：{tail}\n初始预测：{preds}\n"
+                "审查：1)是否延续趋势 2)幅度是否合理 3)有无突变\n"
+                "仅输出JSON：{{\"predictions\": [v1,v2,...]}}"
+            ),
+            input_variables=["trend", "volatility", "mean", "std", "tail", "preds"]
+        )
+        rc_raw = LLMChain(llm=llm, prompt=rc_prompt).invoke({
+            "trend": insights["trend"], "volatility": insights["volatility"],
+            "mean": insights["mean"], "std": insights["std"],
+            "tail": str(data_y[-5:]), "preds": str(predictions)
+        })
+        rc_match = re.search(r'\{.*\}', rc_raw["text"], re.DOTALL)
+        rc_parsed = json.loads(rc_match.group())
+        refined = [float(v) for v in rc_parsed["predictions"][:steps]]
+        if len(refined) == len(predictions):
+            predictions = refined
+            confidence = min(confidence + 0.05, 1.0)
+    except Exception:
+        pass  # RC失败保留原始预测
+
+    # === Phase 4: SV ===
     mean_val, std_val = insights["mean"], insights["std"]
     lower, upper = mean_val - 3 * std_val, mean_val + 3 * std_val
 
