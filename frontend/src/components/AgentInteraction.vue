@@ -29,7 +29,11 @@
         <div class="message-bubble">
           <div v-html="renderMarkdown(msg.text)" class="markdown-content"></div>
           <div v-if="msg.chartData" class="chart-container">
-            <v-chart class="chart" :option="getChartOption(msg.chartData)" style="height: 350px;" autoresize/>
+            <v-chart class="chart" :option="getChartOption(msg.chartData, msg.smartPrediction)" style="height: 350px;" autoresize/>
+            <div v-if="msg.smartPrediction" class="smart-badge">
+              <span class="badge-engine">{{ msg.smartPrediction.engine }}</span>
+              <span class="badge-confidence">置信度: {{ (msg.smartPrediction.confidence * 100).toFixed(0) }}%</span>
+            </div>
           </div>
         </div>
         <div v-if="msg.sender === 'user'" class="avatar">
@@ -234,7 +238,8 @@ const handleUploadSuccess = (response) => {
       sender: 'agent',
       text: response.report,
       isReport: true,
-      chartData: response.chart_data
+      chartData: response.chart_data,
+      smartPrediction: response.smart_prediction
     });
   }
   scrollToBottom();
@@ -249,17 +254,33 @@ const handleUploadError = (error) => {
 };
 
 // ECharts图表配置 (无变化)
-const getChartOption = (chartData) => ({
-  tooltip: { trigger: 'axis' },
-  legend: { data: ['历史数据', 'ARIMA预测值'], top: 'bottom', textStyle: { color: '#e2e8f0' } },
-  grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
-  xAxis: { type: 'value', name: 'X', splitLine: { show: false } },
-  yAxis: { type: 'value', name: 'Y', splitLine: { lineStyle: { color: '#334155' } } },
-  series: [
+const getChartOption = (chartData, smartPrediction) => {
+  const legends = ['历史数据', 'ARIMA预测值'];
+  const series = [
     { name: '历史数据', type: 'line', smooth: true, showSymbol: false, data: chartData.history_data, itemStyle: { color: '#38bdf8' } },
     { name: 'ARIMA预测值', type: 'line', smooth: true, showSymbol: false, data: chartData.forecast_data, lineStyle: { type: 'dashed' }, itemStyle: { color: '#67c23a' } }
-  ]
-});
+  ];
+
+  if (smartPrediction && smartPrediction.predictions && chartData.forecast_data) {
+    legends.push('智能预测引擎');
+    const smartData = chartData.forecast_data.map((point, i) =>
+      i < smartPrediction.predictions.length ? [point[0], smartPrediction.predictions[i]] : null
+    ).filter(Boolean);
+    series.push({
+      name: '智能预测引擎', type: 'line', smooth: true, showSymbol: false,
+      data: smartData, lineStyle: { type: 'dotted', width: 2 }, itemStyle: { color: '#f59e0b' }
+    });
+  }
+
+  return {
+    tooltip: { trigger: 'axis' },
+    legend: { data: legends, top: 'bottom', textStyle: { color: '#e2e8f0' } },
+    grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+    xAxis: { type: 'value', name: 'X', splitLine: { show: false } },
+    yAxis: { type: 'value', name: 'Y', splitLine: { lineStyle: { color: '#334155' } } },
+    series
+  };
+};
 </script>
 
 <style scoped>
@@ -473,6 +494,23 @@ const getChartOption = (chartData) => ({
   padding: 1rem;
   border: 1px solid #e5e5e5;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.smart-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+.badge-engine {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+.badge-confidence {
+  color: #6b7280;
 }
 .message-bubble :deep(h3) {
   font-size: 1.1rem;

@@ -10,7 +10,7 @@ from models.arima_predictor import predict_with_arima
 
 from werkzeug.utils import secure_filename
 from models.prediction_tool import analyze_and_predict
-from models.agent_chain import get_conversational_response, generate_standalone_report
+from models.agent_chain import get_conversational_response, generate_standalone_report, smart_predict
 
 # --- 初始化 Flask 应用 ---
 # app = Flask(__name__)
@@ -160,19 +160,63 @@ def agent_upload_predict():
         filepath = os.path.join(UPLOADS_DIR, filename)
         file.save(filepath)
 
-        # 1. 调用数据分析工具 (这个没变)
+        # 1. ARIMA 分析
         analysis_result = analyze_and_predict(filepath)
-        
-        # 2. 调用【新的、独立的】报告生成函数
+
+        # 2. 生成报告
         report_markdown = generate_standalone_report(analysis_result)
 
-        # 3. 将报告和图表数据一起返回给前端 (这个没变)
+        # 3. 智能预测引擎
+        smart_result = None
+        summary = analysis_result.get("summary_stats", {})
+        if "historical_y" in summary and len(summary["historical_y"]) >= 10:
+            try:
+                smart_result = smart_predict(summary["historical_y"], steps=summary.get("forecast_steps", 10))
+            except Exception:
+                pass
+
         response_data = {
             "report": report_markdown,
-            "chart_data": analysis_result.get("chart_data", None)
+            "chart_data": analysis_result.get("chart_data", None),
+            "smart_prediction": smart_result
         }
-        
+
         return jsonify(response_data)
+
+    return jsonify({"error": "文件上传失败"}), 500
+
+@app.route('/api/smart-predict', methods=['POST'])
+def smart_predict_api():
+    """【鼠先知智能预测引擎API】: 接收文件，执行三阶段Agent协作预测。"""
+    if 'file' not in request.files:
+        return jsonify({"error": "请求中未找到文件部分"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "未选择任何文件"}), 400
+
+    steps = request.form.get('steps', 10, type=int)
+
+    if file:
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(UPLOADS_DIR, filename)
+        file.save(filepath)
+
+        try:
+            df = pd.read_csv(filepath, dtype=str, encoding='utf-8-sig')
+            if df.shape[1] < 2:
+                return jsonify({"error": "CSV文件必须至少包含两列"}), 400
+
+            y_col = df.columns[1]
+            data_y = pd.to_numeric(df[y_col], errors='coerce').dropna().tolist()
+
+            if len(data_y) < 10:
+                return jsonify({"error": f"有效数据点过少({len(data_y)}个)，至少需要10个"}), 400
+
+            result = smart_predict(data_y, steps=steps)
+            return jsonify(result)
+        except Exception as e:
+            return jsonify({"error": f"预测失败: {str(e)}"}), 500
 
     return jsonify({"error": "文件上传失败"}), 500
 

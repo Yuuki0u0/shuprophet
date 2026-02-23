@@ -78,7 +78,9 @@ def analyze_and_predict(csv_path: str, steps: int = 10) -> dict:
                 "historical_points": len(history_y),
                 "forecast_steps": steps,
                 "historical_y_mean": round(pd.Series(history_y).mean(), 2),
-                "forecast_y_mean": round(pd.Series(forecast_y).mean(), 2)
+                "forecast_y_mean": round(pd.Series(forecast_y).mean(), 2),
+                "historical_y": history_y,
+                "forecast_y": forecast_y
             }
         }
         return result

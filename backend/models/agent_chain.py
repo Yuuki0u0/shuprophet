@@ -10,16 +10,39 @@ from langchain.memory import ConversationBufferMemory
 from langchain_core.prompts.chat import MessagesPlaceholder
 from langchain_core.prompts import ChatPromptTemplate
 import json
+import re
 import numpy as np
 
-# --- 这部分与之前相同：加载环境变量并实例化模型 ---
+# --- 加载环境变量并自动识别 API 提供商 ---
 load_dotenv()
-llm = ChatOpenAI(
-    model_name="glm-4-flash",
-    openai_api_key=os.getenv("OPENAI_API_KEY"),
-    openai_api_base="https://open.bigmodel.cn/api/paas/v4/",
-    temperature=0.7
-)
+
+def _detect_llm():
+    """根据 API Key 或 Base URL 自动识别 Kimi / GLM 并实例化模型"""
+    api_key = os.getenv("OPENAI_API_KEY", "")
+    api_base = os.getenv("OPENAI_API_BASE", "")
+
+    # 按 base URL 识别
+    if "moonshot" in api_base:
+        return ChatOpenAI(model_name="moonshot-v1-8k", openai_api_key=api_key,
+                          openai_api_base=api_base, temperature=0.7)
+    if "bigmodel" in api_base:
+        return ChatOpenAI(model_name="glm-4-flash", openai_api_key=api_key,
+                          openai_api_base=api_base, temperature=0.7)
+
+    # 无 base URL 时按 key 前缀猜测
+    if api_key.startswith("sk-") and len(api_key) > 50:
+        # 智谱 key 通常较长（含 . 分隔）
+        if "." in api_key:
+            return ChatOpenAI(model_name="glm-4-flash", openai_api_key=api_key,
+                              openai_api_base="https://open.bigmodel.cn/api/paas/v4/", temperature=0.7)
+        return ChatOpenAI(model_name="moonshot-v1-8k", openai_api_key=api_key,
+                          openai_api_base="https://api.moonshot.cn/v1", temperature=0.7)
+
+    # 默认 GLM
+    return ChatOpenAI(model_name="glm-4-flash", openai_api_key=api_key,
+                      openai_api_base="https://open.bigmodel.cn/api/paas/v4/", temperature=0.7)
+
+llm = _detect_llm()
 
 # --- 核心升级：为 Agent 注入丰富的角色和个性的系统提示词 ---
 system_prompt = """
@@ -126,46 +149,117 @@ def generate_standalone_report(analysis_result: dict) -> str:
     if 'summary_stats' not in analysis_result:
         return "### 分析失败\n\n数据分析工具未能返回有效的统计摘要信息。"
 
-    # 提取数据并进行深度分析
     summary = analysis_result['summary_stats']
 
-    # 使用Python分析数据特征（不耗token）
+    # 从 summary 中提取原始数据进行统计分析
     insights = {}
     if 'historical_y' in summary:
         insights = analyze_data_insights(summary['historical_y'])
 
-    # 构建精简的提示词
-    report_prompt_template = """你是"鼠先知"AI分析师。基于以下数据生成专业报告：
+    trend = insights.get('trend', '未知')
+    volatility = insights.get('volatility', '中')
+    anomaly_count = insights.get('anomaly_count', 0)
+    pred_mean = summary.get('forecast_y_mean', summary.get('historical_y_mean', 'N/A'))
+    hist_mean = summary.get('historical_y_mean', 'N/A')
 
-数据特征：{insights}
-预测结果：{summary}
-
-生成简洁报告（200字内），包括：
-1. 数据趋势：{trend}趋势，波动性{volatility}
-2. 预测结果：未来均值{pred_mean}
-3. 模型推荐：基于{volatility}波动性，推荐使用{model_rec}
-4. 风险提示：发现{anomaly_count}个异常点
-
-用专业但易懂的语言，直接输出Markdown。"""
-
-    # 智能模型推荐
-    model_rec = "ScatterFusion（鲁棒性强）" if insights.get('volatility') == '高' else \
+    model_rec = "ScatterFusion（鲁棒性强）" if volatility == '高' else \
                 "AWGFormer（多尺度分析）" if insights.get('has_seasonality') else \
                 "EnergyPatchTST（不确定性量化）"
 
+    report_prompt_template = """你是"鼠先知"AI分析师。基于以下信息生成简洁专业报告（200字内），直接输出Markdown：
+
+- 数据量：{hist_points}个历史点，预测{forecast_steps}步
+- 历史均值：{hist_mean}，预测均值：{pred_mean}
+- 趋势：{trend}，波动性：{volatility}
+- 异常点：{anomaly_count}个
+- 推荐模型：{model_rec}
+
+包含：趋势分析、预测解读、模型推荐、风险提示。"""
+
     REPORT_PROMPT = PromptTemplate(
         template=report_prompt_template,
-        input_variables=["insights", "summary", "trend", "volatility", "pred_mean", "model_rec", "anomaly_count"]
+        input_variables=["hist_points", "forecast_steps", "hist_mean", "pred_mean",
+                         "trend", "volatility", "anomaly_count", "model_rec"]
     )
     report_chain = LLMChain(llm=llm, prompt=REPORT_PROMPT)
 
     response = report_chain.invoke({
-        "insights": json.dumps(insights, ensure_ascii=False),
-        "summary": json.dumps(summary, ensure_ascii=False)[:200],  # 限制长度
-        "trend": insights.get('trend', '未知'),
-        "volatility": insights.get('volatility', '中'),
-        "pred_mean": summary.get('predicted_mean', 'N/A'),
-        "model_rec": model_rec,
-        "anomaly_count": insights.get('anomaly_count', 0)
+        "hist_points": summary.get('historical_points', 'N/A'),
+        "forecast_steps": summary.get('forecast_steps', 'N/A'),
+        "hist_mean": hist_mean,
+        "pred_mean": pred_mean,
+        "trend": trend,
+        "volatility": volatility,
+        "anomaly_count": anomaly_count,
+        "model_rec": model_rec
     })
     return response['text']
+
+
+# === 鼠先知智能预测引擎 ===
+# 三阶段 Agent 协作框架：FAP → CoTP → SV
+
+def smart_predict(data_y: list, steps: int = 10) -> dict:
+    """
+    鼠先知智能预测引擎
+    Phase 1 - Feature-Aware Profiling (FAP): 零token统计特征提取
+    Phase 2 - Chain-of-Thought Prediction (CoTP): 特征引导链式推理
+    Phase 3 - Statistical Validation (SV): 置信度校准与异常修正
+    """
+    # === Phase 1: FAP ===
+    insights = analyze_data_insights(data_y)
+    context_len = min(30, len(data_y))
+    recent = data_y[-context_len:]
+
+    # === Phase 2: CoTP ===
+    prompt = PromptTemplate(
+        template=(
+            "作为时序分析专家，基于数据特征和近期观测预测未来{steps}步。\n"
+            "特征：趋势={trend}, 波动={volatility}(std={std}), "
+            "均值={mean}, 周期性={seas}\n"
+            "近期数据：{recent}\n"
+            "仅输出JSON：{{\"predictions\": [v1,v2,...], \"confidence\": 0到1}}"
+        ),
+        input_variables=["steps", "trend", "volatility", "std", "mean", "seas", "recent"]
+    )
+
+    try:
+        raw = LLMChain(llm=llm, prompt=prompt).invoke({
+            "steps": steps, "trend": insights["trend"],
+            "volatility": insights["volatility"], "std": insights["std"],
+            "mean": insights["mean"],
+            "seas": "有" if insights["has_seasonality"] else "无",
+            "recent": str(recent)
+        })
+        json_match = re.search(r'\{.*\}', raw["text"], re.DOTALL)
+        parsed = json.loads(json_match.group())
+        predictions = [float(x) for x in parsed["predictions"][:steps]]
+        confidence = float(parsed.get("confidence", 0.5))
+    except Exception:
+        # Fallback: 线性外推
+        x = np.arange(len(data_y))
+        slope, intercept = np.polyfit(x, data_y, 1)
+        predictions = [float(slope * (len(data_y) + i) + intercept) for i in range(steps)]
+        confidence = 0.3
+
+    # === Phase 3: SV ===
+    mean_val, std_val = insights["mean"], insights["std"]
+    lower, upper = mean_val - 3 * std_val, mean_val + 3 * std_val
+
+    validated = []
+    for p in predictions:
+        if std_val > 0 and (p < lower or p > upper):
+            p = max(lower, min(upper, p))
+            confidence *= 0.9
+        validated.append(round(p, 4))
+
+    while len(validated) < steps:
+        validated.append(validated[-1] if validated else round(mean_val, 4))
+
+    return {
+        "engine": "鼠先知智能预测引擎",
+        "predictions": validated,
+        "confidence": round(min(confidence, 1.0), 2),
+        "data_profile": insights,
+        "steps": steps
+    }
