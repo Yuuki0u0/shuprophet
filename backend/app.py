@@ -44,7 +44,10 @@ app.register_blueprint(admin_bp)
 # 创建数据库表
 with app.app_context():
     from models.db_models import User, Post, Comment, PostLike, RedeemCode, DailyUsage, CreditLog
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception:
+        pass
 
 # --- 定义路径 ---
 STATIC_DATA_DIR = 'static_data'
