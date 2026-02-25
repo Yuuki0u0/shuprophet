@@ -15,13 +15,13 @@ from agent.reasoner import TSReasoner
 from utils.auth_utils import login_required, decode_token
 from blueprints.credits import check_and_consume_chat
 
-from extensions import db, SECRET_KEY
+from extensions import db, SECRET_KEY, DATABASE_URL
 
 # --- 初始化 Flask 应用 ---
 app = Flask(__name__, static_folder='../dist')
 app.config['SECRET_KEY'] = SECRET_KEY
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(
-    os.path.abspath(os.path.dirname(__file__)), 'shu_prophet.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL or (
+    'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(__file__)), 'shu_prophet.db')
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 CORS(app)
