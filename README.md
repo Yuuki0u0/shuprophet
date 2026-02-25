@@ -4,7 +4,7 @@
   <img src="./frontend/src/assets/logo.png" alt="SHU Prophet Logo" width="600"/>
 
 <p>
-    <strong>基于团队自研算法的时间序列智能分析平台</strong>
+    <strong>学术驱动的时间序列智能决策平台</strong>
   </p>
 
 <p>
@@ -24,9 +24,10 @@
 
 <p>
     <img src="https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=for-the-badge&logo=vue.js" alt="Vue 3">
-    <img src="https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python" alt="Python">
+    <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python" alt="Python">
     <img src="https://img.shields.io/badge/Flask-2.x-000000?style=for-the-badge&logo=flask" alt="Flask">
     <img src="https://img.shields.io/badge/LangChain-Powered-8A2BE2?style=for-the-badge" alt="LangChain">
+    <img src="https://img.shields.io/badge/PostgreSQL-Supported-4169E1?style=for-the-badge&logo=postgresql" alt="PostgreSQL">
   </p>
 </div>
 
@@ -42,218 +43,168 @@
 
 ## 📖 项目简介
 
-**鼠先知 (SHU Prophet)** 是一个集成了多个自研时间序列预测算法的Web应用平台。平台的核心模型均来自团队在国际会议上发表的学术成果，旨在将前沿的时序分析技术以可视化、易用的方式呈现给研究者和开发者。
+**鼠先知 (SHU Prophet)** 是一个将学术研究成果产品化的时间序列智能决策平台。平台背后的 6 个预测模型全部来自团队发表在 CCF 推荐国际会议上的原创论文（2 篇 CCF-B + 4 篇 CCF-C），覆盖小波变换、散射变换、状态空间模型、扩散模型等前沿方向。
 
-### 🎓 学术成果
+与传统的"跑脚本看结果"不同，鼠先知提供了完整的 Web 交互体验：AI 智能助理对话式分析、双引擎预测对比、社区广场知识共享，以及用户积分体系 — 让时序预测不再只是研究者的专属工具。
 
-平台集成的6个预测模型全部基于团队的原创研究，已发表于CCF推荐的国际学术会议：
+### 🎓 学术背景
 
-- **2篇 CCF-B 类会议论文** (ICASSP 2026)
-- **4篇 CCF-C 类会议论文** (ICANN 2025, ICIC 2025)
+| 级别  | 会议                   | 论文数 |
+| ----- | ---------------------- | ------ |
+| CCF-B | ICASSP 2026            | 2 篇   |
+| CCF-C | ICANN 2025 / ICIC 2025 | 4 篇   |
 
-这些模型涵盖了小波变换、散射变换、状态空间模型、扩散模型等多种前沿技术，在多个公开数据集上取得了不错的预测效果。
+所有论文均由 **黎玮 (Wei Li)** 作为第一作者完成。
 
 ## 💡 为什么选择鼠先知？
 
-### 🎯 零门槛上手
+### 🤖 AI 驱动的分析体验
 
-- **无需编程基础**：通过Web界面即可使用，无需编写代码
-- **无需统计学背景**：AI助理自动分析数据特征，生成易懂的分析报告
-- **拖拽式操作**：上传CSV文件即可开始分析，简单直观
+- **对话式交互**：通过自然语言与 AI 助理沟通，无需编程即可完成数据分析
+- **双引擎预测**：ARIMA 经典统计引擎 + 自研多 Agent 协作智能引擎，交叉验证结果
+- **深度推理模式**：支持思考链（Chain-of-Thought）推理，展示完整分析轨迹
+- **智能报告生成**：自动识别趋势、波动性、异常值，生成专业分析报告
 
-### ☁️ 远程部署，随时访问
+### 📊 科研级可视化
 
-- **无需本地环境**：不需要配置Python、CUDA等复杂环境
-- **无需高性能硬件**：模型推理在云端完成，普通电脑即可使用
-- **跨平台支持**：支持Windows、macOS、Linux，甚至移动端浏览器
-- **未来规划**：计划提供付费API服务，支持大规模时序预测任务
+- **多模型对比**：在同一图表中对比 6 个自研模型的预测效果
+- **标准化评估**：自动计算 MAE、MSE 等指标，确保公平对比
+- **交互式图表**：基于 ECharts 的动态图表，支持缩放、筛选、导出
 
-### 🔧 统一接口，便于科研
+### 🌐 社区与协作
 
-- **标准化数据格式**：统一的CSV输入输出格式，方便模型对比
-- **一致的评估指标**：自动计算MAE、MSE等标准指标，确保公平对比
-- **可扩展架构**：研究者可轻松添加新模型到平台进行对比验证
-- **可复现性**：所有预测结果可导出，便于论文撰写和实验复现
+- **社区广场**：分享 AI 对话和分析结果，与其他用户交流
+- **积分体系**：每日免费对话额度 + 积分充值，支持兑换码
+- **用户系统**：注册登录、个人中心、对话历史管理
 
-### 📊 强大的可视化能力
+### ☁️ 开箱即用
 
-- **交互式图表**：基于ECharts的动态图表，支持缩放、筛选、导出
-- **多模型对比**：在同一视图中对比多个模型的预测效果
-- **性能排名**：自动计算并展示各模型的性能排名
-- **专业报告**：AI自动生成图文并茂的分析报告
+- **零环境配置**：云端部署，浏览器打开即用
+- **跨平台**：PC、平板、手机均可访问
+- **一键部署**：Docker + Zeabur，几分钟上线
 
 ## 🔬 集成模型
 
-平台集成了6个自研时间序列预测模型，均已发表于CCF推荐的国际学术会议。所有论文均由**黎玮（Wei Li）**作为第一作者完成。
+平台集成了 6 个自研时间序列预测模型，覆盖从经典信号处理到前沿生成式建模的多种技术路线：
 
-### CCF-B 类会议论文
+| 模型                       | 会议        | 级别  | 核心技术                   | 适用场景                 |
+| -------------------------- | ----------- | ----- | -------------------------- | ------------------------ |
+| **ScatterFusion**    | ICASSP 2026 | CCF-B | 层级散射变换，宏微观融合   | 非平稳序列、噪声鲁棒预测 |
+| **AWGFormer**        | ICASSP 2026 | CCF-B | 自适应小波引导 Transformer | 长期依赖、多分辨率分析   |
+| **EnergyPatchTST**   | ICIC 2025   | CCF-C | 序列分块与不确定性量化     | 能源预测、置信区间估计   |
+| **SWIFT**            | ICANN 2025  | CCF-C | 状态空间与扩张卷积融合     | 边缘部署、低延迟推理     |
+| **LWSpace**          | ICIC 2025   | CCF-C | 小波分解与选择性状态空间   | 精度与效率平衡           |
+| **TimeFlowDiffuser** | ICANN 2025  | CCF-C | 层级式扩散框架             | 长周期预测、数据生成     |
 
-| 模型                    | 会议   | 年份 | 核心技术                     | 第一作者 |
-| ----------------------- | ------ | ---- | ---------------------------- | -------- |
-| **ScatterFusion** | ICASSP | 2026 | 层级散射变换，宏微观融合预测 | Wei Li   |
-| **AWGFormer**     | ICASSP | 2026 | 自适应小波引导Transformer    | Wei Li   |
+## 👥 团队
 
-### CCF-C 类会议论文
-
-| 模型                       | 会议  | 年份 | 核心技术                 | 第一作者 |
-| -------------------------- | ----- | ---- | ------------------------ | -------- |
-| **EnergyPatchTST**   | ICIC  | 2025 | 序列分块与不确定性量化   | Wei Li   |
-| **SWIFT**            | ICANN | 2025 | 状态空间与扩张卷积融合   | Wei Li   |
-| **LWSpace**          | ICIC  | 2025 | 小波分解与选择性状态空间 | Wei Li   |
-| **TimeFlowDiffuser** | ICANN | 2025 | 层级式扩散框架           | Wei Li   |
-
-### 模型特点
-
-- **ScatterFusion**: 利用散射变换提取多尺度不变特征，适合处理非平稳时间序列
-- **AWGFormer**: 结合小波分解和Transformer注意力机制，擅长捕捉长期依赖关系
-- **EnergyPatchTST**: 专为能源领域设计，支持不确定性量化，提供预测置信区间
-- **SWIFT**: 轻量级模型，适合边缘设备部署，推理速度快
-- **LWSpace**: 融合小波卷积和状态空间模型，平衡精度和效率
-- **TimeFlowDiffuser**: 基于扩散模型，可用于数据生成和缺失值修复
-
-## 👥 团队介绍
-
-**鼠先知**由上海大学计算机工程与科学学院的本科生团队开发和维护：
+**鼠先知**由上海大学计算机工程与科学学院本科生团队开发：
 
 <div align="center">
 
-| 姓名                           | 角色                  | 贡献                                |
-| ------------------------------ | --------------------- | ----------------------------------- |
-| **黎玮 (Wei Li)**        | 项目负责人 & 算法研发 | 6篇论文第一作者，核心算法设计与实现 |
-| **王子欣 (Zixin Wang)**  | 前端开发              | 用户界面设计与交互优化              |
-| **徐若轩 (Ruoxuan Xu)**  | 后端开发              | 服务架构与API设计                   |
-| **杨哲涵 (Zhehan Yang)** | 全栈开发              | 系统集成与部署                      |
+| 姓名                           | 角色                  | 贡献                                 |
+| ------------------------------ | --------------------- | ------------------------------------ |
+| **黎玮 (Wei Li)**        | 项目负责人 & 算法研发 | 6 篇论文第一作者，核心算法与平台架构 |
+| **王子欣 (Zixin Wang)**  | 前端开发              | 用户界面设计与交互优化               |
+| **徐若轩 (Ruoxuan Xu)**  | 后端开发              | 服务架构与 API 设计                  |
+| **杨哲涵 (Zhehan Yang)** | 全栈开发              | 系统集成与部署                       |
 
 </div>
 
-### 关于我们
-
-我们是一群对时间序列分析充满热情的本科生。在导师的指导下，我们在过去的一年里完成了6篇学术论文的撰写和发表，并将这些研究成果转化为实用的Web应用。
-
-虽然我们的研究还处于起步阶段，但我们希望通过这个平台，让更多人能够接触和使用前沿的时序预测技术。我们也期待与社区的交流和反馈，不断改进平台的功能和用户体验。
-
 **联系方式**: liwei008009@163.com
 
-## ✨ 核心功能
+## 🚀 部署指南
 
-### 📊 模型性能可视化
+### 方式一：Zeabur 一键部署（推荐）
 
-- **多模型对比展示**: 在同一图表中对比多个预测模型的表现
-- **性能指标计算**: 自动计算并展示MAE、MSE等评估指标
-- **交互式图表**: 基于ECharts的动态图表，支持缩放、数据筛选等操作
-- **性能排名**: 按预测精度自动排序，直观展示模型优劣
+1. Fork 本仓库到你的 GitHub 账号
+2. 在 [Zeabur](https://zeabur.com) 创建项目，导入 GitHub 仓库
+3. 添加 **PostgreSQL** 服务（Zeabur 会自动注入 `DATABASE_URL`）
+4. 在服务的环境变量中配置：
 
-### 🤖 AI智能分析
+```
+OPENAI_API_KEY=你的API密钥
+OPENAI_API_BASE=https://api.moonshot.cn/v1
+ADMIN_PASSWORD=你的管理员密码
+```
 
-- **数据特征分析**: 自动识别趋势、波动性、异常值和周期性
-- **模型推荐**: 根据数据特征智能推荐适合的预测模型
-- **分析报告生成**: 自动生成包含数据洞察和预测结果的专业报告
-- **对话式交互**: 支持自然语言问答，解答用户关于模型和预测的疑问
+5. 部署完成后访问分配的域名即可
 
-### 📈 数据管理
+### 方式二：Docker 部署
 
-- **CSV格式支持**: 标准CSV格式，兼容Excel、Python等工具
-- **数据预处理**: 自动处理缺失值、异常值等数据质量问题
-- **数据可视化**: 原始数据的趋势图、分布图等多种可视化方式
+```bash
+# 构建镜像
+docker build -t shuprophet .
 
-## 🚀 快速开始
+# 运行（连接外部 PostgreSQL）
+docker run -p 8080:8080 \
+  -e DATABASE_URL=postgresql://user:pass@host:5432/dbname \
+  -e OPENAI_API_KEY=你的API密钥 \
+  -e OPENAI_API_BASE=https://api.moonshot.cn/v1 \
+  -e ADMIN_PASSWORD=你的管理员密码 \
+  shuprophet
+```
 
-### 环境要求
+> 不设置 `DATABASE_URL` 时自动回退到 SQLite（仅适合本地开发）。
 
-- **Python** >= 3.9
-- **Node.js** >= 16
-- **pip** & **npm**
-
-### 1. 克隆项目
+### 方式三：本地开发
 
 ```bash
 git clone https://github.com/William-Liwei/shuprophet.git
 cd shuprophet
 ```
 
-### 2. 后端启动
+**后端：**
 
 ```bash
-# 进入后端目录
 cd backend
-
-# 创建虚拟环境（推荐）
 python -m venv venv
 # Windows: venv\Scripts\activate
 # macOS/Linux: source venv/bin/activate
-
-# 安装依赖
 pip install -r requirements.txt
-
-# 配置环境变量
-# 复制 .env.example 为 .env，并填入API密钥
-cp .env.example .env
-
-# 启动服务
-python app.py
 ```
 
-后端服务将运行在 `http://127.0.0.1:5000`
+在项目根目录创建 `.env` 文件：
 
-### 3. 前端启动
+```
+OPENAI_API_KEY=你的API密钥
+OPENAI_API_BASE=https://api.moonshot.cn/v1
+ADMIN_PASSWORD=你的管理员密码
+```
 
 ```bash
-# 进入前端目录（新终端窗口）
-cd frontend
-
-# 安装依赖
-npm install
-
-# 启动开发服务器
-npm run dev
+python app.py
+# 后端运行在 http://127.0.0.1:5000
 ```
 
-前端应用将运行在 `http://localhost:5173`
+**前端（新终端）：**
+
+```bash
+cd frontend
+npm install
+npm run dev
+# 前端运行在 http://localhost:5173
+```
+
+### 环境变量说明
+
+| 变量                | 必填 | 说明                                     |
+| ------------------- | ---- | ---------------------------------------- |
+| `OPENAI_API_KEY`  | 是   | LLM API 密钥（支持 Moonshot / 智谱 GLM） |
+| `OPENAI_API_BASE` | 否   | API 地址，不填则自动识别                 |
+| `DATABASE_URL`    | 否   | PostgreSQL 连接串，不填则使用 SQLite     |
+| `ADMIN_PASSWORD`  | 否   | 管理后台密码，不设则管理功能禁用         |
+| `JWT_SECRET_KEY`  | 否   | JWT 签名密钥，不填使用默认值             |
 
 ## 🛠️ 技术架构
 
-### 前端技术栈
-
-- **框架**: Vue 3 + Vite
-- **UI组件**: Element Plus
-- **数据可视化**: ECharts
-- **路由**: Vue Router
-- **HTTP客户端**: Axios
-
-### 后端技术栈
-
-- **Web框架**: Flask
-- **数据处理**: Pandas, NumPy
-- **统计分析**: Scikit-learn, Statsmodels
-- **AI集成**: LangChain, OpenAI-compatible APIs
-
-### AI功能实现
-
-- **统计分析**: 使用Python进行趋势检测、异常识别等计算
-- **自然语言生成**: 使用LLM将分析结果转化为易读的报告
-- **对话管理**: 基于LangChain的会话记忆和上下文管理
-
-## 📚 使用说明
-
-### 查看模型对比
-
-1. 访问"科研成果探索"页面
-2. 选择数据集（如ETTh1_full.csv）
-3. 系统自动加载并展示所有模型的预测结果
-4. 查看性能对比图表和评估指标
-
-### 使用AI分析
-
-1. 访问"智能助手"页面
-2. 上传自己的时间序列数据（CSV格式）
-3. AI助理自动分析数据特征并生成报告
-4. 可通过对话进一步询问分析细节
-
-### 查看算法详情
-
-1. 访问"算法文库"页面
-2. 浏览各模型的技术细节和论文信息
-3. 查看BibTeX引用格式
+| 层级   | 技术                                              |
+| ------ | ------------------------------------------------- |
+| 前端   | Vue 3 + Vite, Element Plus, ECharts, Pinia, Axios |
+| 后端   | Flask, SQLAlchemy, Gunicorn (gthread)             |
+| AI     | LangChain, Moonshot / 智谱 GLM (OpenAI 兼容接口)  |
+| 数据库 | PostgreSQL（生产） / SQLite（开发）               |
+| 部署   | Docker 多阶段构建, Zeabur                         |
 
 ## 📁 项目结构
 
@@ -261,46 +212,58 @@ npm run dev
 shuprophet/
 ├── backend/
 │   ├── models/
-│   │   ├── agent_chain.py          # AI助理核心逻辑
-│   │   ├── prediction_tool.py      # 预测分析工具
-│   │   └── arima_predictor.py      # ARIMA基线模型
-│   ├── static_data/
-│   │   └── research_datasets/      # 预测数据集
-│   ├── app.py                      # Flask主应用
+│   │   ├── agent_chain.py          # AI 助理对话 & 智能预测引擎
+│   │   ├── prediction_tool.py      # 数据分析工具
+│   │   └── arima_predictor.py      # ARIMA 基线模型
+│   ├── agent/
+│   │   └── reasoner.py             # 思考模式推理器
+│   ├── blueprints/
+│   │   ├── auth.py                 # 注册 / 登录 / JWT
+│   │   ├── user.py                 # 个人资料 / 头像
+│   │   ├── community.py            # 社区广场
+│   │   ├── credits.py              # 积分 / 兑换码 / 用量控制
+│   │   └── admin.py                # 管理后台
+│   ├── extensions.py               # DB / 配置
+│   ├── auto_migrate.py             # 数据库自动迁移
+│   ├── app.py                      # Flask 主应用
 │   └── requirements.txt
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── components/             # Vue组件
+│   │   ├── components/             # Vue 组件
 │   │   ├── views/                  # 页面视图
+│   │   ├── stores/                 # Pinia 状态管理
+│   │   ├── utils/                  # 工具函数
 │   │   ├── router/                 # 路由配置
 │   │   └── assets/                 # 静态资源
 │   └── package.json
 │
+├── Dockerfile                      # 多阶段构建
+├── entrypoint.sh                   # 容器启动脚本
 └── README.md
 ```
 
 ## 📄 许可证
 
-本项目采用 Apache License 2.0 许可证。详见 [LICENSE](LICENSE) 文件。
+Apache License 2.0 — 详见 [LICENSE](LICENSE)。
 
 ## 🤝 贡献
 
-欢迎提交Issue和Pull Request！如果你有任何建议或发现了bug，请随时联系我们。
+欢迎提交 Issue 和 Pull Request。
 
-## 📮 联系我们
+## 📮 联系
 
 - **项目负责人**: 黎玮 (Wei Li)
 - **邮箱**: liwei008009@163.com
-- **学校**: 上海大学 计算机工程与科学学院
+- **上海大学** 计算机工程与科学学院
 
 ---
 
 <div align="center">
   <p>
-    <strong>如果这个项目对你有帮助，请给我们一个 ⭐ Star！</strong>
+    <strong>如果这个项目对你有帮助，请给我们一个 ⭐ Star</strong>
   </p>
   <p>
-    <em>Time Series Forecasting Research Platform by SHU Undergraduates</em>
+    <em>Academic-Driven Time Series Intelligence Platform by SHU Undergraduates</em>
   </p>
 </div>
