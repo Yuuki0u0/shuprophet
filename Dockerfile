@@ -12,6 +12,8 @@ RUN pip install --no-cache-dir -r backend/requirements.txt
 COPY backend/ ./backend/
 COPY uploads/ ./uploads/
 COPY --from=frontend /src/frontend/dist ./dist
+COPY entrypoint.sh ./entrypoint.sh
+RUN chmod +x entrypoint.sh
 
 EXPOSE 8080
-CMD ["gunicorn", "-w", "2", "-b", "0.0.0.0:8080", "app:app", "--chdir", "backend"]
+CMD ["./entrypoint.sh"]
