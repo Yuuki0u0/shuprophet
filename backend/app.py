@@ -221,12 +221,27 @@ def agent_message():
     if not user_message:
         return jsonify({"error": "消息内容不能为空"}), 400
 
+    # 简单问候直接返回静态回复，不消耗配额和AI调用
+    _GREETING_KEYWORDS = ['你好', '您好', 'hello', 'hi', '嗨', '在吗']
+    if user_message.strip().lower() in _GREETING_KEYWORDS:
+        return jsonify({"reply": (
+            "你好！我是**鼠先知 (SHU Prophet)** AI智能助理 🐭\n\n"
+            "我可以帮你进行时间序列数据的分析与预测。"
+            "只需上传一个CSV文件（含X、Y两列），"
+            "我就能为你生成专业的预测报告。\n\n"
+            "有什么我可以帮你的吗？"
+        )})
+
     # 检查用量并消耗配额
     ok, err = check_and_consume_chat(g.user_id)
     if not ok:
         return jsonify({"error": err}), 403
 
-    agent_reply = get_conversational_response(user_message, session_id)
+    try:
+        agent_reply = get_conversational_response(user_message, session_id)
+    except Exception as e:
+        return jsonify({"reply": "抱歉，AI服务暂时不可用，请稍后再试。"}), 200
+
     return jsonify({"reply": agent_reply})
 
 # --- 智能助理文件处理API（支持思考模式）---
@@ -254,9 +269,12 @@ def agent_upload_predict():
         filepath = os.path.join(UPLOADS_DIR, filename)
         file.save(filepath)
 
-        # 1. ARIMA 基础分析
-        analysis_result = analyze_and_predict(filepath)
-        report_markdown = generate_standalone_report(analysis_result)
+        try:
+            # 1. ARIMA 基础分析
+            analysis_result = analyze_and_predict(filepath)
+            report_markdown = generate_standalone_report(analysis_result)
+        except Exception as e:
+            return jsonify({"error": f"数据分析失败: {str(e)}"}), 500
 
         # 2. 智能预测引擎
         smart_result = None
