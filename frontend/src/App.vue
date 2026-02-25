@@ -30,7 +30,7 @@
         </el-menu-item>
         <el-menu-item index="/app">
           <el-icon><DataAnalysis /></el-icon>
-          <span>核心功能</span>
+          <span>数据探索</span>
         </el-menu-item>
         <el-menu-item index="/algorithms">
           <el-icon><Cpu /></el-icon>

@@ -44,7 +44,7 @@
     <!-- CTA -->
     <section class="cta-section">
       <el-button type="primary" size="large" @click="$router.push('/app')" round class="cta-btn">
-        进入核心功能 <el-icon class="el-icon--right"><ArrowRight /></el-icon>
+        进入数据探索 <el-icon class="el-icon--right"><ArrowRight /></el-icon>
       </el-button>
       <p class="cta-hint">Wei Li &middot; Zixin Wang</p>
     </section>

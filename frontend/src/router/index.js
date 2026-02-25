@@ -20,7 +20,7 @@ const router = createRouter({
       path: '/app',
       name: 'app',
       component: () => import('../views/MainAppView.vue'),
-      meta: { title: '核心功能' }
+      meta: { title: '数据探索' }
     },
     {
       path: '/algorithms',
