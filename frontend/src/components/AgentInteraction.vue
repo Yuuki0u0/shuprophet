@@ -302,11 +302,16 @@ const sendMessage = async (initialMessage = '', isGreeting = false) => {
     const status = error.response?.status;
     const errMsg = error.response?.data?.error;
     if (status === 401) {
-      messages.value.push({ sender: 'agent', text: '⚠️ 请先登录后再使用智能助理' });
+      // 同步清除 Pinia store 状态
+      const authStore = useAuthStore();
+      authStore.logout();
+      messages.value.push({ sender: 'agent', text: '⚠️ 登录已过期，请重新登录后使用智能助理' });
     } else if (status === 403 && errMsg) {
       messages.value.push({ sender: 'agent', text: `⚠️ ${errMsg}` });
+    } else if (errMsg) {
+      messages.value.push({ sender: 'agent', text: `⚠️ ${errMsg}` });
     } else {
-      messages.value.push({ sender: 'agent', text: '抱歉，我好像遇到了一点网络问题。' });
+      messages.value.push({ sender: 'agent', text: `抱歉，服务出了点问题 (${status || '网络错误'})` });
     }
   } finally {
     isAgentTyping.value = false;

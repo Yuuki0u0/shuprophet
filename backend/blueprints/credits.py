@@ -88,6 +88,13 @@ def complete_task():
     if task_type not in TASK_REWARDS:
         return jsonify({'error': '未知任务类型'}), 400
 
+    # 每种任务每人只能完成一次
+    already = CreditLog.query.filter_by(
+        user_id=g.user_id, type='task', description=f'完成任务: {task_type}'
+    ).first()
+    if already:
+        return jsonify({'error': '你已经完成过该任务了'}), 400
+
     reward = TASK_REWARDS[task_type]
     user = User.query.get(g.user_id)
     user.credits += reward
