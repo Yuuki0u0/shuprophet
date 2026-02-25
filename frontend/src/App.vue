@@ -40,7 +40,26 @@
           <el-icon><InfoFilled /></el-icon>
           <span>关于项目</span>
         </el-menu-item>
+        <el-menu-item index="/community">
+          <el-icon><ChatDotRound /></el-icon>
+          <span>社区广场</span>
+        </el-menu-item>
       </el-menu>
+
+      <!-- 用户信息区 -->
+      <div class="sidebar-user">
+        <template v-if="isLoggedIn">
+          <div class="user-info" @click="$router.push('/profile')">
+            <img :src="user?.avatar_url || '/api/user/avatars/default.png'" class="sidebar-avatar" />
+            <span class="sidebar-nickname">{{ user?.nickname || user?.username }}</span>
+          </div>
+          <el-button size="small" text style="color:#6e6e73" @click="handleLogout">退出</el-button>
+        </template>
+        <template v-else>
+          <el-button size="small" type="primary" @click="$router.push('/login')">登录</el-button>
+          <el-button size="small" @click="$router.push('/register')">注册</el-button>
+        </template>
+      </div>
     </el-aside>
 
     <!-- [修改] 将 el-main 包裹在一个新的 el-container 中，以便添加 el-header -->
@@ -57,7 +76,9 @@
       <el-main class="app-main">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
-            <component :is="Component" />
+            <keep-alive include="AgentView">
+              <component :is="Component" />
+            </keep-alive>
           </transition>
         </router-view>
       </el-main>
@@ -74,11 +95,14 @@
 </template>
 
 <script setup>
-// [修改] 导入 onMounted 和 ref
-import { onMounted, ref } from 'vue';
-// [新增] 导入移动端菜单需要的新图标
-import { Menu, TrendCharts, House, DataAnalysis, Cpu, InfoFilled } from '@element-plus/icons-vue';
+import { onMounted, ref, computed } from 'vue';
+import { Menu, TrendCharts, House, DataAnalysis, Cpu, InfoFilled, ChatDotRound } from '@element-plus/icons-vue';
+import { useAuthStore } from '@/stores/auth';
 import logoUrl from '@/assets/logo.png';
+
+const auth = useAuthStore();
+const isLoggedIn = computed(() => auth.isLoggedIn);
+const user = computed(() => auth.user);
 
 // --- 您原有的 Favicon 代码 (保持不变) ---
 onMounted(() => {
@@ -105,11 +129,49 @@ const handleMenuSelect = () => {
   }
 };
 // --- 汉堡菜单逻辑结束 ---
+
+const handleLogout = () => {
+  auth.logout();
+  window.location.reload();
+};
 </script>
 
 <!-- [新增] scoped CSS, 防止污染全局 -->
 <style scoped>
 .app-header {
-  display: none; /* 默认不显示，只在移动端通过全局 CSS 显示 */
+  display: none;
+}
+.sidebar-user {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 16px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
+.sidebar-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.sidebar-nickname {
+  color: #1d1d1f;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

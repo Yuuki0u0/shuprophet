@@ -5,8 +5,16 @@
 # --- Python / Backend ---
 /backend/venv/
 /backend/__pycache__/
+/backend/models/__pycache__/
+/backend/utils/__pycache__/
+/backend/blueprints/__pycache__/
 *.pyc
 .env
+/backend/shu_prophet.db
+/backend/avatars/
+/backend/migrate.py
+/backend/generate_codes.py
+/backend/agent/__pycache__/
 
 # --- Node / Frontend ---
 # 这是最关键的一行，忽略所有的 node_modules 文件夹

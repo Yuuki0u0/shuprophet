@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, g
 from flask_cors import CORS
 import os
 import pandas as pd
@@ -11,11 +11,40 @@ from models.arima_predictor import predict_with_arima
 from werkzeug.utils import secure_filename
 from models.prediction_tool import analyze_and_predict
 from models.agent_chain import get_conversational_response, generate_standalone_report, smart_predict
+from agent.reasoner import TSReasoner
+from utils.auth_utils import login_required, decode_token
+from blueprints.credits import check_and_consume_chat
+
+from extensions import db, SECRET_KEY
 
 # --- 初始化 Flask 应用 ---
-# app = Flask(__name__)
 app = Flask(__name__, static_folder='../dist')
+app.config['SECRET_KEY'] = SECRET_KEY
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(
+    os.path.abspath(os.path.dirname(__file__)), 'shu_prophet.db'
+)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 CORS(app)
+
+# 初始化数据库
+db.init_app(app)
+
+# 注册蓝图
+from blueprints.auth import auth_bp
+from blueprints.user import user_bp
+from blueprints.community import community_bp
+from blueprints.credits import credits_bp
+from blueprints.admin import admin_bp
+app.register_blueprint(auth_bp)
+app.register_blueprint(user_bp)
+app.register_blueprint(community_bp)
+app.register_blueprint(credits_bp)
+app.register_blueprint(admin_bp)
+
+# 创建数据库表
+with app.app_context():
+    from models.db_models import User, Post, Comment, PostLike, RedeemCode, DailyUsage, CreditLog
+    db.create_all()
 
 # --- 定义路径 ---
 STATIC_DATA_DIR = 'static_data'
@@ -24,11 +53,63 @@ if not os.path.exists(UPLOADS_DIR):
     os.makedirs(UPLOADS_DIR)
 
 # --- 数据预处理与计算函数 ---
+def _sanitize(obj):
+    """递归将 numpy 类型转为 Python 原生类型。"""
+    if isinstance(obj, dict):
+        return {k: _sanitize(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_sanitize(v) for v in obj]
+    if isinstance(obj, (np.integer,)):
+        return int(obj)
+    if isinstance(obj, (np.floating,)):
+        return float(obj)
+    if isinstance(obj, (np.bool_,)):
+        return bool(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    return obj
+
 def smooth(y, win=11, poly=3):
     """Savitzky-Golay平滑函数"""
     if len(y) < win:
         return y
     return savgol_filter(y, window_length=win, polyorder=poly)
+
+# --- 思考模式辅助函数 ---
+_THINK_KEYWORDS = ['思考', '深度分析', '详细分析', '推理', '深入', '仔细',
+                   'think', 'analyze', 'deep', 'reason', '为什么', '原因',
+                   '分析一下', '帮我看看', '诊断']
+
+def _should_think(message: str) -> bool:
+    """根据用户消息判断是否启用思考模式。"""
+    if not message:
+        return False
+    msg = message.lower()
+    return any(kw in msg for kw in _THINK_KEYWORDS)
+
+def _format_trajectory(trajectory: dict) -> list:
+    """将推理轨迹格式化为前端可展示的结构。"""
+    steps = trajectory.get("steps", [])
+    formatted = []
+    for s in steps:
+        obs = s.get("observation", {})
+        # 生成简洁的结果摘要
+        summary_parts = []
+        for k, v in obs.items():
+            if k == "tool":
+                continue
+            sv = str(v)
+            if len(sv) > 50:
+                sv = sv[:47] + "..."
+            summary_parts.append(f"{k}={sv}")
+        formatted.append({
+            "step": s["step"],
+            "thought": s["thought"],
+            "tool": s["action"],
+            "result": ", ".join(summary_parts) if summary_parts else "done",
+            "time": s.get("timestamp", 0)
+        })
+    return formatted
 
 # --- API 路由 ---
 
@@ -130,24 +211,34 @@ def live_predict():
 
 # --- 核心升级：新增一个只处理文本消息的API ---
 @app.route('/api/agent-message', methods=['POST'])
+@login_required
 def agent_message():
     """【智能助理对话API】: 接收用户文本消息，返回助理的文本回复。"""
     data = request.json
     user_message = data.get('message')
-    session_id = data.get('session_id', 'default_session') # 获取会话ID
+    session_id = data.get('session_id', 'default_session')
 
     if not user_message:
         return jsonify({"error": "消息内容不能为空"}), 400
 
-    # 调用我们新的对话处理函数
+    # 检查用量并消耗配额
+    ok, err = check_and_consume_chat(g.user_id)
+    if not ok:
+        return jsonify({"error": err}), 403
+
     agent_reply = get_conversational_response(user_message, session_id)
-    
     return jsonify({"reply": agent_reply})
 
-# --- 核心升级：修改旧的API，让它只负责文件上传和报告生成 ---
+# --- 智能助理文件处理API（支持思考模式）---
 @app.route('/api/agent-upload-predict', methods=['POST'])
+@login_required
 def agent_upload_predict():
-    """【智能助理文件处理API】: 接收文件，调用工具，并让LangChain生成最终报告。"""
+    """智能助理文件处理API: 接收文件+可选消息，支持思考模式深度推理。"""
+    # 检查用量并消耗配额
+    ok, err = check_and_consume_chat(g.user_id)
+    if not ok:
+        return jsonify({"error": err}), 403
+
     if 'file' not in request.files:
         return jsonify({"error": "请求中未找到文件部分"}), 400
 
@@ -155,33 +246,53 @@ def agent_upload_predict():
     if file.filename == '':
         return jsonify({"error": "未选择任何文件"}), 400
 
+    # 获取用户附带的文本消息
+    user_message = request.form.get('message', '')
+
     if file:
         filename = secure_filename(file.filename)
         filepath = os.path.join(UPLOADS_DIR, filename)
         file.save(filepath)
 
-        # 1. ARIMA 分析
+        # 1. ARIMA 基础分析
         analysis_result = analyze_and_predict(filepath)
-
-        # 2. 生成报告
         report_markdown = generate_standalone_report(analysis_result)
 
-        # 3. 智能预测引擎
+        # 2. 智能预测引擎
         smart_result = None
         summary = analysis_result.get("summary_stats", {})
-        if "historical_y" in summary and len(summary["historical_y"]) >= 10:
+        data_y = summary.get("historical_y", [])
+        forecast_steps = summary.get("forecast_steps", 10)
+
+        if len(data_y) >= 10:
             try:
-                smart_result = smart_predict(summary["historical_y"], steps=summary.get("forecast_steps", 10))
+                smart_result = smart_predict(data_y, steps=forecast_steps)
+            except Exception:
+                pass
+
+        # 3. 思考模式：深度推理分析
+        thinking_result = None
+        if _should_think(user_message) and len(data_y) >= 10:
+            try:
+                reasoner = TSReasoner()
+                raw = reasoner.predict(data_y, steps=forecast_steps)
+                thinking_result = _sanitize({
+                    "trajectory": _format_trajectory(raw.get("trajectory", {})),
+                    "data_profile": raw.get("data_profile", {}),
+                    "predictions": raw.get("predictions", []),
+                    "confidence": raw.get("confidence", {}),
+                })
             except Exception:
                 pass
 
         response_data = {
             "report": report_markdown,
             "chart_data": analysis_result.get("chart_data", None),
-            "smart_prediction": smart_result
+            "smart_prediction": smart_result,
+            "thinking": thinking_result,
         }
 
-        return jsonify(response_data)
+        return jsonify(_sanitize(response_data))
 
     return jsonify({"error": "文件上传失败"}), 500
 
@@ -217,6 +328,42 @@ def smart_predict_api():
             return jsonify(result)
         except Exception as e:
             return jsonify({"error": f"预测失败: {str(e)}"}), 500
+
+    return jsonify({"error": "文件上传失败"}), 500
+
+@app.route('/api/agent-reason', methods=['POST'])
+def agent_reason():
+    """【思考模式推理API】: 执行完整推理循环，返回预测结果与推理轨迹。"""
+    if 'file' not in request.files:
+        return jsonify({"error": "请求中未找到文件部分"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "未选择任何文件"}), 400
+
+    steps = request.form.get('steps', 10, type=int)
+
+    if file:
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(UPLOADS_DIR, filename)
+        file.save(filepath)
+
+        try:
+            df = pd.read_csv(filepath, dtype=str, encoding='utf-8-sig')
+            if df.shape[1] < 2:
+                return jsonify({"error": "CSV文件必须至少包含两列"}), 400
+
+            y_col = df.columns[1]
+            data_y = pd.to_numeric(df[y_col], errors='coerce').dropna().tolist()
+
+            if len(data_y) < 10:
+                return jsonify({"error": f"有效数据点过少({len(data_y)}个)，至少需要10个"}), 400
+
+            reasoner = TSReasoner()
+            result = reasoner.predict(data_y, steps=steps)
+            return jsonify(_sanitize(result))
+        except Exception as e:
+            return jsonify({"error": f"推理失败: {str(e)}"}), 500
 
     return jsonify({"error": "文件上传失败"}), 500
 

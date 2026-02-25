@@ -1,0 +1,188 @@
+import json
+from flask import Blueprint, request, jsonify, g
+from extensions import db
+from models.db_models import User, Post, Comment, PostLike
+from utils.auth_utils import login_required
+
+community_bp = Blueprint('community', __name__, url_prefix='/api/community')
+
+
+@community_bp.route('/posts', methods=['GET'])
+def list_posts():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    per_page = min(per_page, 50)
+
+    pagination = Post.query.order_by(Post.created_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+
+    posts = []
+    for p in pagination.items:
+        posts.append(_post_brief(p))
+
+    return jsonify({
+        'posts': posts,
+        'total': pagination.total,
+        'page': page,
+        'pages': pagination.pages
+    })
+
+
+@community_bp.route('/posts', methods=['POST'])
+@login_required
+def create_post():
+    data = request.json or {}
+    content = data.get('content', '').strip()
+    if not content:
+        return jsonify({'error': '内容不能为空'}), 400
+
+    post = Post(user_id=g.user_id, content=content)
+    db.session.add(post)
+    db.session.commit()
+    return jsonify({'post': _post_brief(post)}), 201
+
+
+@community_bp.route('/posts/<int:post_id>', methods=['GET'])
+def get_post(post_id):
+    post = Post.query.get(post_id)
+    if not post:
+        return jsonify({'error': '帖子不存在'}), 404
+
+    comments = []
+    for c in post.comments.order_by(Comment.created_at.asc()).all():
+        author = User.query.get(c.user_id)
+        comments.append({
+            'id': c.id,
+            'content': c.content,
+            'created_at': c.created_at.isoformat(),
+            'author': {
+                'id': author.id,
+                'nickname': author.nickname,
+                'avatar_url': author.avatar_url
+            } if author else None
+        })
+
+    result = _post_brief(post)
+    result['comments'] = comments
+    if post.conversation_json:
+        result['conversation'] = json.loads(post.conversation_json)
+    return jsonify({'post': result})
+
+
+@community_bp.route('/posts/<int:post_id>', methods=['DELETE'])
+@login_required
+def delete_post(post_id):
+    post = Post.query.get(post_id)
+    if not post:
+        return jsonify({'error': '帖子不存在'}), 404
+    if post.user_id != g.user_id:
+        return jsonify({'error': '无权删除'}), 403
+    db.session.delete(post)
+    db.session.commit()
+    return jsonify({'message': '已删除'})
+
+
+@community_bp.route('/posts/<int:post_id>/comments', methods=['POST'])
+@login_required
+def add_comment(post_id):
+    post = Post.query.get(post_id)
+    if not post:
+        return jsonify({'error': '帖子不存在'}), 404
+    data = request.json or {}
+    content = data.get('content', '').strip()
+    if not content:
+        return jsonify({'error': '评论不能为空'}), 400
+
+    comment = Comment(post_id=post_id, user_id=g.user_id, content=content)
+    db.session.add(comment)
+    db.session.commit()
+
+    author = User.query.get(g.user_id)
+    return jsonify({'comment': {
+        'id': comment.id,
+        'content': comment.content,
+        'created_at': comment.created_at.isoformat(),
+        'author': {
+            'id': author.id,
+            'nickname': author.nickname,
+            'avatar_url': author.avatar_url
+        }
+    }}), 201
+
+
+@community_bp.route('/comments/<int:comment_id>', methods=['DELETE'])
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.query.get(comment_id)
+    if not comment:
+        return jsonify({'error': '评论不存在'}), 404
+    if comment.user_id != g.user_id:
+        return jsonify({'error': '无权删除'}), 403
+    db.session.delete(comment)
+    db.session.commit()
+    return jsonify({'message': '已删除'})
+
+
+@community_bp.route('/posts/<int:post_id>/like', methods=['POST'])
+@login_required
+def toggle_like(post_id):
+    post = Post.query.get(post_id)
+    if not post:
+        return jsonify({'error': '帖子不存在'}), 404
+
+    existing = PostLike.query.filter_by(
+        post_id=post_id, user_id=g.user_id
+    ).first()
+
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+        liked = False
+    else:
+        like = PostLike(post_id=post_id, user_id=g.user_id)
+        db.session.add(like)
+        db.session.commit()
+        liked = True
+
+    count = PostLike.query.filter_by(post_id=post_id).count()
+    return jsonify({'liked': liked, 'like_count': count})
+
+
+@community_bp.route('/share-conversation', methods=['POST'])
+@login_required
+def share_conversation():
+    data = request.json or {}
+    content = data.get('content', '').strip()
+    conversation = data.get('conversation', [])
+
+    if not content:
+        content = '分享了一段AI对话'
+
+    post = Post(
+        user_id=g.user_id,
+        content=content,
+        conversation_json=json.dumps(conversation, ensure_ascii=False)
+    )
+    db.session.add(post)
+    db.session.commit()
+    return jsonify({'post': _post_brief(post)}), 201
+
+
+def _post_brief(post):
+    author = User.query.get(post.user_id)
+    like_count = PostLike.query.filter_by(post_id=post.id).count()
+    comment_count = post.comments.count()
+    return {
+        'id': post.id,
+        'content': post.content,
+        'has_conversation': post.conversation_json is not None,
+        'like_count': like_count,
+        'comment_count': comment_count,
+        'created_at': post.created_at.isoformat(),
+        'author': {
+            'id': author.id,
+            'nickname': author.nickname,
+            'avatar_url': author.avatar_url
+        } if author else None
+    }

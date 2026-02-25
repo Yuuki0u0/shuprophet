@@ -5,7 +5,28 @@
       <span>智能助理 SHU Prophet</span>
     </h2>
 
-    <!-- 对话窗口 (无变化) -->
+    <!-- 积分信息栏 -->
+    <div class="credits-bar" v-if="creditsInfo">
+      <span class="credits-item">
+        今日免费: <b>{{ creditsInfo.free_remaining }}</b>/{{ creditsInfo.free_limit }}
+      </span>
+      <span class="credits-item">
+        积分余额: <b>{{ creditsInfo.credits }}</b>
+      </span>
+      <el-button size="small" type="warning" plain @click="showRedeemDialog = true">兑换积分</el-button>
+      <el-button size="small" plain @click="shareWebsite">分享赚积分</el-button>
+    </div>
+
+    <!-- 兑换码弹窗 -->
+    <el-dialog v-model="showRedeemDialog" title="兑换积分" width="400px" destroy-on-close>
+      <el-input v-model="redeemCode" placeholder="请输入兑换码" maxlength="64" clearable />
+      <template #footer>
+        <el-button @click="showRedeemDialog = false">取消</el-button>
+        <el-button type="primary" :loading="redeeming" @click="doRedeem">兑换</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 对话窗口 -->
     <div class="chat-window" ref="chatWindowRef">
       <!-- 消息历史 -->
       <div v-for="(msg, index) in messages" :key="index" class="message-container" :class="msg.sender">
@@ -27,7 +48,30 @@
           <div v-if="msg.showBubble" class="click-bubble">{{ msg.bubbleText }}</div>
         </div>
         <div class="message-bubble">
+          <!-- 思考过程（可折叠） -->
+          <div v-if="msg.thinking" class="thinking-section">
+            <div class="thinking-header" @click="msg.thinkingExpanded = !msg.thinkingExpanded">
+              <span class="thinking-icon">💭</span>
+              <span>思考过程 ({{ msg.thinking.trajectory.length }}步)</span>
+              <span class="thinking-toggle">{{ msg.thinkingExpanded ? '▲ 收起' : '▼ 展开' }}</span>
+            </div>
+            <div v-if="msg.thinkingExpanded" class="thinking-steps">
+              <div v-for="step in msg.thinking.trajectory" :key="step.step" class="thinking-step">
+                <div class="step-header">
+                  <span class="step-num">{{ step.step }}</span>
+                  <span class="step-tool">{{ step.tool }}</span>
+                  <span class="step-time">{{ step.time }}s</span>
+                </div>
+                <div class="step-thought">{{ step.thought }}</div>
+                <div class="step-result">{{ step.result }}</div>
+              </div>
+            </div>
+          </div>
           <div v-html="renderMarkdown(msg.text)" class="markdown-content"></div>
+          <!-- 单条消息分享按钮 -->
+          <div v-if="msg.sender === 'agent' && msg.text && !isAgentTyping" class="msg-share-btn">
+            <el-button size="small" text type="primary" @click.stop="shareSingleMessage(msg)">分享此回答</el-button>
+          </div>
           <div v-if="msg.chartData" class="chart-container">
             <v-chart class="chart" :option="getChartOption(msg.chartData, msg.smartPrediction)" style="height: 350px;" autoresize/>
             <div v-if="msg.smartPrediction" class="smart-badge">
@@ -49,31 +93,34 @@
       </div>
     </div>
 
-    <!-- 核心升级：全新的输入区域，集成了文本输入、上传和发送按钮 -->
+    <!-- 输入区域：文本+文件附件+发送 -->
     <div class="input-area">
-      <el-input
-        v-model="userInput"
-        placeholder="在这里输入消息..."
-        @keyup.enter="sendMessage"
-        :disabled="isAgentTyping"
-        clearable
-      >
-        <!-- 将上传按钮集成到输入框的后面 -->
-        <template #append>
-          <el-upload
-            ref="uploadRef"
-            action="/api/agent-upload-predict"
-            name="file"
-            :show-file-list="false"
-            :on-success="handleUploadSuccess"
-            :on-error="handleUploadError"
-            :before-upload="beforeUpload"
-          >
-            <el-button :icon="UploadFilled" :disabled="isAgentTyping"></el-button>
-          </el-upload>
-        </template>
-      </el-input>
-      <el-button type="primary" @click="sendMessage" :disabled="isAgentTyping" style="margin-left: 10px;">发送</el-button>
+      <div v-if="pendingFile" class="file-chip">
+        <span>📎 {{ pendingFile.name }}</span>
+        <span class="file-chip-remove" @click="removePendingFile">✕</span>
+      </div>
+      <div class="input-row">
+        <el-input
+          v-model="userInput"
+          :placeholder="pendingFile ? '输入附加说明（如：帮我深度分析一下）...' : '在这里输入消息...'"
+          @keyup.enter="sendMessage"
+          :disabled="isAgentTyping"
+          clearable
+        >
+          <template #append>
+            <el-button :icon="UploadFilled" :disabled="isAgentTyping" @click="triggerFileSelect"></el-button>
+          </template>
+        </el-input>
+        <el-button type="primary" @click="sendMessage" :disabled="isAgentTyping" style="margin-left: 10px;">发送</el-button>
+      </div>
+      <input ref="fileInputRef" type="file" accept=".csv" style="display: none" @change="onFileSelected" />
+    </div>
+
+    <!-- 分享到社区按钮 -->
+    <div v-if="messages.length > 1" class="share-bar">
+      <el-button size="small" type="success" plain @click="shareToCommmunity">
+        分享对话到社区
+      </el-button>
     </div>
 
     <!-- COMBO效果 - 传送到body确保在最上层 -->
@@ -94,7 +141,8 @@ import { ref, nextTick, onMounted, computed } from 'vue';
 import { ElMessage } from 'element-plus';
 import { marked } from 'marked';
 import { UploadFilled } from '@element-plus/icons-vue'
-import axios from 'axios';
+import request from '@/utils/request';
+import { useAuthStore } from '@/stores/auth';
 
 // Markdown渲染函数
 marked.setOptions({ breaks: true, gfm: true });
@@ -115,16 +163,25 @@ const isAgentTyping = ref(false);
 const chatWindowRef = ref(null);
 const messages = ref([]);
 const sessionId = ref(`session_${Date.now()}_${Math.random()}`);
+const pendingFile = ref(null);
+const fileInputRef = ref(null);
 const isBlinking = ref(false);
 const clickCounts = ref({});
 const mousePos = ref({ x: 0, y: 0 });
 const showGlobalCombo = ref(false);
 const comboPos = ref({ x: 0, y: 0 });
 
+// 积分相关状态
+const creditsInfo = ref(null);
+const showRedeemDialog = ref(false);
+const redeemCode = ref('');
+const redeeming = ref(false);
+
 // --- 生命周期钩子 ---
 onMounted(() => {
   sendMessage('你好', true);
   startBlinking();
+  fetchCredits();
   window.addEventListener('mousemove', handleMouseMove);
 });
 
@@ -191,70 +248,171 @@ const scrollToBottom = () => {
   });
 };
 
-// 发送纯文本消息
+// 发送消息（支持纯文本 / 文件+文本）
 const sendMessage = async (initialMessage = '', isGreeting = false) => {
   const textToSend = isGreeting ? initialMessage : userInput.value.trim();
-  if (!textToSend) return;
+  const file = pendingFile.value;
 
+  // 没有文本也没有文件，不发送
+  if (!textToSend && !file) return;
+
+  // 显示用户消息
   if (!isGreeting) {
-    messages.value.push({ sender: 'user', text: textToSend });
+    let userText = textToSend || '';
+    if (file) userText = userText ? `📎 ${file.name}\n${userText}` : `📎 ${file.name}`;
+    messages.value.push({ sender: 'user', text: userText });
   }
 
   userInput.value = '';
+  const currentFile = file;
+  pendingFile.value = null;
   isAgentTyping.value = true;
   scrollToBottom();
 
   try {
-    const response = await axios.post('/api/agent-message', {
-      message: textToSend,
-      session_id: sessionId.value
-    });
-    messages.value.push({ sender: 'agent', text: response.data.reply });
+    if (currentFile) {
+      // 文件+文本模式：通过 FormData 发送
+      const formData = new FormData();
+      formData.append('file', currentFile);
+      formData.append('message', textToSend || '');
+      const response = await request.post('/agent-upload-predict', formData);
+      const data = response.data;
+      if (data.error) {
+        messages.value.push({ sender: 'agent', text: `分析失败: ${data.error}` });
+      } else {
+        messages.value.push({
+          sender: 'agent',
+          text: data.report,
+          isReport: true,
+          chartData: data.chart_data,
+          smartPrediction: data.smart_prediction,
+          thinking: data.thinking,
+          thinkingExpanded: false,
+        });
+      }
+    } else {
+      // 纯文本模式
+      const response = await request.post('/agent-message', {
+        message: textToSend,
+        session_id: sessionId.value
+      });
+      messages.value.push({ sender: 'agent', text: response.data.reply });
+    }
   } catch (error) {
-    messages.value.push({ sender: 'agent', text: '抱歉，我好像遇到了一点网络问题。' });
+    const status = error.response?.status;
+    const errMsg = error.response?.data?.error;
+    if (status === 401) {
+      messages.value.push({ sender: 'agent', text: '⚠️ 请先登录后再使用智能助理' });
+    } else if (status === 403 && errMsg) {
+      messages.value.push({ sender: 'agent', text: `⚠️ ${errMsg}` });
+    } else {
+      messages.value.push({ sender: 'agent', text: '抱歉，我好像遇到了一点网络问题。' });
+    }
   } finally {
     isAgentTyping.value = false;
     scrollToBottom();
+    fetchCredits();
   }
 };
 
-// 文件上传前的钩子
-const beforeUpload = (file) => {
+// 文件选择（不自动上传）
+const triggerFileSelect = () => {
+  fileInputRef.value?.click();
+};
+
+const onFileSelected = (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
   const isCSV = file.type === 'text/csv' || file.name.endsWith('.csv');
   if (!isCSV) {
     ElMessage.error('只能上传 CSV 格式的文件!');
-    return false;
+    e.target.value = '';
+    return;
   }
-  messages.value.push({ sender: 'user', text: `(已上传文件: ${file.name})` });
-  isAgentTyping.value = true;
-  scrollToBottom();
-  return true;
+  pendingFile.value = file;
+  e.target.value = '';
 };
 
-// 文件上传成功的回调
-const handleUploadSuccess = (response) => {
-  isAgentTyping.value = false;
-  if (response.error) {
-    messages.value.push({ sender: 'agent', text: `分析失败: ${response.error}` });
-  } else {
-    messages.value.push({
-      sender: 'agent',
-      text: response.report,
-      isReport: true,
-      chartData: response.chart_data,
-      smartPrediction: response.smart_prediction
+const removePendingFile = () => {
+  pendingFile.value = null;
+};
+
+// 分享对话到社区
+const shareToCommmunity = async () => {
+  const authStore = useAuthStore();
+  if (!authStore.isLoggedIn) {
+    ElMessage.warning('请先登录后再分享');
+    return;
+  }
+  const conversation = messages.value
+    .filter(m => m.text)
+    .map(m => ({ sender: m.sender, text: m.text }));
+  try {
+    await request.post('/community/share-conversation', {
+      content: '分享了一段与鼠先知的AI对话',
+      conversation
     });
+    ElMessage.success('已分享到社区广场');
+  } catch {
+    ElMessage.error('分享失败');
   }
-  scrollToBottom();
 };
 
-// 文件上传失败的回调
-const handleUploadError = (error) => {
-  isAgentTyping.value = false;
-  const errorMsg = JSON.parse(error.message)?.error || '上传或分析失败，请检查文件或后端服务。';
-  messages.value.push({ sender: 'agent', text: `出现错误: ${errorMsg}` });
-  scrollToBottom();
+// 获取积分信息
+const fetchCredits = async () => {
+  try {
+    const res = await request.get('/credits/info');
+    creditsInfo.value = res.data;
+  } catch {
+    // 未登录或请求失败，忽略
+  }
 };
+
+// 分享单条消息到社区
+const shareSingleMessage = async (msg) => {
+  try {
+    await request.post('/community/share-conversation', {
+      content: '分享了鼠先知的一条回答',
+      conversation: [{ sender: msg.sender, text: msg.text }]
+    });
+    ElMessage.success('已分享到社区广场');
+  } catch {
+    ElMessage.error('分享失败');
+  }
+};
+
+// 分享网站赚积分
+const shareWebsite = async () => {
+  try {
+    await navigator.clipboard.writeText(window.location.origin);
+    await request.post('/credits/task', { task_type: 'share_website' });
+    ElMessage.success('链接已复制，获得 5 积分');
+    fetchCredits();
+  } catch {
+    ElMessage.error('操作失败');
+  }
+};
+
+// 兑换码充值
+const doRedeem = async () => {
+  if (!redeemCode.value.trim()) {
+    ElMessage.warning('请输入兑换码');
+    return;
+  }
+  redeeming.value = true;
+  try {
+    const res = await request.post('/credits/redeem', { code: redeemCode.value.trim() });
+    ElMessage.success(res.data.message);
+    redeemCode.value = '';
+    showRedeemDialog.value = false;
+    fetchCredits();
+  } catch (e) {
+    ElMessage.error(e.response?.data?.error || '兑换失败');
+  } finally {
+    redeeming.value = false;
+  }
+};
+
 
 // ECharts图表配置 (无变化)
 const getChartOption = (chartData, smartPrediction) => {
@@ -596,12 +754,13 @@ const getChartOption = (chartData, smartPrediction) => {
 .input-area {
   margin-top: 1.5rem;
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.input-row {
+  display: flex;
   align-items: center;
   gap: 12px;
-}
-.input-area :deep(.el-upload) {
-  --el-input-group-append-padding: 0;
-  --el-input-group-append-border-color: transparent;
 }
 .input-area :deep(.el-input__wrapper) {
   background-color: #ffffff;
@@ -613,5 +772,151 @@ const getChartOption = (chartData, smartPrediction) => {
   border-radius: 20px;
   padding: 12px 24px;
   font-weight: 500;
+}
+
+/* 文件附件芯片 */
+.file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #e8f4fd;
+  color: #1a73e8;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  max-width: 300px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.file-chip-remove {
+  cursor: pointer;
+  font-size: 14px;
+  color: #999;
+  margin-left: 4px;
+}
+.file-chip-remove:hover {
+  color: #e74c3c;
+}
+
+/* 思考过程样式 */
+.thinking-section {
+  margin-bottom: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fafafa;
+}
+.thinking-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #6b7280;
+  user-select: none;
+  transition: background 0.2s;
+}
+.thinking-header:hover {
+  background: #f0f0f0;
+}
+.thinking-icon {
+  font-size: 16px;
+}
+.thinking-toggle {
+  margin-left: auto;
+  font-size: 12px;
+  color: #9ca3af;
+}
+.thinking-steps {
+  padding: 0 12px 10px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.thinking-step {
+  padding: 6px 0;
+  border-bottom: 1px dashed #e5e7eb;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.thinking-step:last-child {
+  border-bottom: none;
+}
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.step-num {
+  background: #e0e7ff;
+  color: #4338ca;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.step-tool {
+  font-weight: 600;
+  color: #374151;
+}
+.step-time {
+  margin-left: auto;
+  color: #9ca3af;
+  font-size: 11px;
+}
+.step-thought {
+  color: #6b7280;
+  padding-left: 28px;
+}
+.step-result {
+  color: #059669;
+  padding-left: 28px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  word-break: break-all;
+}
+
+/* 分享按钮栏 */
+.share-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+/* 积分信息栏 */
+.credits-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  background: #f0f7ff;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #6e6e73;
+  flex-wrap: wrap;
+}
+.credits-item b {
+  color: #0071e3;
+  font-weight: 600;
+}
+
+/* 单条消息分享按钮 */
+.msg-share-btn {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.message-bubble:hover .msg-share-btn {
+  opacity: 1;
 }
 </style>
